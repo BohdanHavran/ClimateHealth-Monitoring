@@ -1,0 +1,3 @@
+# scan_diff needs unidiff; detect-secrets does not install it by default.
+detect-secrets==1.5.0
+unidiff==0.7.5

@@ -47,14 +47,18 @@ def scan(staged=False, history=False, known_secret_env=None):
             findings.extend({'file':relative,'line':secret.line_number,'rule':secret.type}
                             for _,secret in collection)
         if history:
-            commits = git('rev-list','--all').decode().splitlines()
-            for commit in commits:
-                collection = SecretsCollection()
-                # A textual patch for each commit; binary contents are excluded by Git.
-                patch = git('show','--format=','--root',commit).decode('utf8',errors='replace')
-                collection.scan_diff(patch)
-                findings.extend({'file':filename,'line':secret.line_number,'rule':secret.type,
-                                 'commit':commit} for filename,secret in collection)
+            with default_settings() as history_settings:
+                # Historical paths can be deleted or renamed in the working tree.
+                # scan_diff must inspect their added lines, not require a current file.
+                history_settings.disable_filters('detect_secrets.filters.common.is_invalid_file')
+                commits = git('rev-list','--all').decode().splitlines()
+                for commit in commits:
+                    collection = SecretsCollection()
+                    # A textual patch for each commit; binary contents are excluded by Git.
+                    patch = git('show','--format=','--root',commit).decode('utf8',errors='replace')
+                    collection.scan_diff(patch)
+                    findings.extend({'file':filename,'line':secret.line_number,'rule':secret.type,
+                                     'commit':commit} for filename,secret in collection)
     return {'mode':'index' if staged else 'git candidates','files_scanned':count,
             'history_scanned':history,'known_local_secret_checked':bool(known_secret),'findings':findings,
             'limitations':'Offline heuristics, no live credential verification; not a guarantee of no secrets.'}

@@ -1,6 +1,6 @@
 -r requirements-ml.txt
 httpx==0.28.1
-detect-secrets==1.5.0
+-r requirements-security.txt
 ruff==0.14.0
 pip-audit==2.9.0
 PyYAML==6.0.2
