@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Body",
+    "foreground": "#18332d",
+    "background": "#ffffff",
+    "ratio": 13.55,
+    "minimum": 4.5,
+    "passed": true
+  },
+  {
+    "name": "Secondary text",
+    "foreground": "#52675f",
+    "background": "#f4f7f5",
+    "ratio": 5.62,
+    "minimum": 4.5,
+    "passed": true
+  },
+  {
+    "name": "Notice text",
+    "foreground": "#52675f",
+    "background": "#edf5f1",
+    "ratio": 5.47,
+    "minimum": 4.5,
+    "passed": true
+  },
+  {
+    "name": "Primary button",
+    "foreground": "#ffffff",
+    "background": "#1c6254",
+    "ratio": 7.18,
+    "minimum": 4.5,
+    "passed": true
+  },
+  {
+    "name": "Warning",
+    "foreground": "#705019",
+    "background": "#faf5e8",
+    "ratio": 6.77,
+    "minimum": 4.5,
+    "passed": true
+  },
+  {
+    "name": "Error",
+    "foreground": "#963c36",
+    "background": "#fff0ed",
+    "ratio": 6.32,
+    "minimum": 4.5,
+    "passed": true
+  },
+  {
+    "name": "Input boundary",
+    "foreground": "#7a8e83",
+    "background": "#ffffff",
+    "ratio": 3.49,
+    "minimum": 3,
+    "passed": true
+  },
+  {
+    "name": "Focus",
+    "foreground": "#155c96",
+    "background": "#ffffff",
+    "ratio": 6.99,
+    "minimum": 3,
+    "passed": true
+  },
+  {
+    "name": "Chart line",
+    "foreground": "#1c6254",
+    "background": "#ffffff",
+    "ratio": 7.18,
+    "minimum": 3,
+    "passed": true
+  }
+]

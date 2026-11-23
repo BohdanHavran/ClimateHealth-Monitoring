@@ -7,7 +7,7 @@ import './styles.css'
 
 const display = (value: number | null) => value === null ? 'Немає даних' : new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 2 }).format(value)
 
-export function HistoryPanel() {
+export function HistoryPanel({ overview = false }: { overview?: boolean }) {
   const [draftYear, setDraftYear] = useState('')
   const [year, setYear] = useState('')
   const [cursors, setCursors] = useState([0])
@@ -15,6 +15,7 @@ export function HistoryPanel() {
   const [page, setPage] = useState<ObservationPage | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [expanded, setExpanded] = useState(false)
   const cursor = cursors[cursors.length - 1]
   useEffect(() => {
     const controller = new AbortController()
@@ -39,8 +40,8 @@ export function HistoryPanel() {
     {!loading && !error && page && (page.data.length === 0 ? <div className="state"><h2>Спостережень не знайдено</h2><p>Для вибраного періоду в базі немає записів. Змініть рік або скиньте фільтр.</p></div> : <>
       <div className="stats"><div><span>Записів на сторінці</span><strong>{page.data.length}</strong></div><div><span>Записів із зауваженнями</span><strong>{page.data.filter(r => r.quality_issues.length > 0).length}</strong></div><div><span>Показники</span><strong>°C <small>/</small> W/m² <small>/</small> %</strong></div></div>
       {page.meta.received_at && <p className="data-caption">Отримано з MySQL: {new Date(page.meta.received_at).toLocaleString('uk-UA')}. Час первинного внесення та походження спостережень невідомі.</p>}
-      <section className="panel"><div className="panel-heading"><div><h2>Температурний профіль</h2><p>Поточна сторінка · лінія з’єднує записи в порядку ID, не доводить безперервність часового ряду</p></div><span className="legend"><i/>Середня температура</span></div><Suspense fallback={<p role="status">Завантаження графіка…</p>}><ObservationChart rows={page.data}/></Suspense></section>
-      <section className="panel"><div className="panel-heading"><div><h2>Збережені спостереження</h2><p>Первинні значення без заміни пропусків або обрізання меж</p></div></div><div className="table-scroll"><table><caption className="sr-only">Історичні кліматичні спостереження з MySQL</caption><thead><tr><th>ID</th><th>Рік / місяць</th><th>Температура, °C</th><th>Радіація, W/m²</th><th>Вологість, %</th><th>Якість запису</th></tr></thead><tbody>{page.data.map(row => <tr key={row.id}><td>{row.id}</td><td>{display(row.year)} / {display(row.month)}</td><td>{display(row.avg_temp)}</td><td>{display(row.solar_irradiance)}</td><td>{display(row.humidity)}</td><td>{row.quality_issues.length ? <span className="quality warning" title={row.quality_issues.join(', ')}>Є зауваження</span> : <span className="quality">Базові перевірки пройдено</span>}</td></tr>)}</tbody></table></div></section>
+      <section className="panel"><div className="panel-heading"><div><h2>Температурний профіль</h2><p>Поточна сторінка · лінія з’єднує записи в порядку ID, не доводить безперервність часового ряду</p></div><span className="legend"><i/>Середня температура</span></div><Suspense fallback={<p role="status">Завантаження графіка…</p>}><ObservationChart rows={page.data}/></Suspense>{overview && <div className="chart-alternative"><button type="button" className="secondary" aria-expanded={expanded} aria-controls="observation-values" onClick={() => setExpanded(value => !value)}>{expanded ? 'Згорнути значення графіка' : 'Показати всі значення графіка в таблиці'}</button></div>}</section>
+      <section className="panel"><div className="panel-heading"><div><h2>{overview ? 'Короткий перегляд спостережень' : 'Збережені спостереження'}</h2><p>{overview ? `Перші ${(expanded ? page.data.length : Math.min(5, page.data.length))} з ${page.data.length} записів поточної сторінки · графік вище охоплює всю сторінку` : 'Первинні значення без заміни пропусків або обрізання меж'}</p></div>{overview && <a className="text-link" href="#history">Усі спостереження →</a>}</div><div className="table-scroll" tabIndex={0} role="region" aria-label="Таблиця спостережень, прокручується горизонтально"><table id="observation-values"><caption className="sr-only">Історичні кліматичні спостереження з MySQL</caption><thead><tr><th scope="col">ID</th><th scope="col">Рік / місяць</th><th scope="col">Температура, °C</th><th scope="col">Радіація, W/m²</th><th scope="col">Вологість, %</th><th scope="col">Якість запису</th></tr></thead><tbody>{(overview && !expanded ? page.data.slice(0, 5) : page.data).map(row => <tr key={row.id}><td>{row.id}</td><td>{display(row.year)} / {display(row.month)}</td><td>{display(row.avg_temp)}</td><td>{display(row.solar_irradiance)}</td><td>{display(row.humidity)}</td><td>{row.quality_issues.length ? <span className="quality warning">Є зауваження<details><summary>Деталі перевірки</summary>{row.quality_issues.join(', ')}</details></span> : <span className="quality">Базові перевірки пройдено</span>}</td></tr>)}</tbody></table></div></section>
     </>)}
     <nav className="pagination" aria-label="Сторінки спостережень"><button className="secondary" disabled={loading || cursors.length === 1} onClick={() => setCursors(c => c.slice(0, -1))}>← Попередня</button><span>Сторінка {cursors.length}</span><button className="secondary" disabled={loading || !page?.meta.next_after_id} onClick={() => { const next = page?.meta.next_after_id; if (next) setCursors(c => [...c, next]) }}>Наступна →</button></nav></section>
 }

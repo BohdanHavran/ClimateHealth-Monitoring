@@ -9,6 +9,7 @@ export function HriPage() {
   const [result, setResult] = useState<HriResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [invalidFields, setInvalidFields] = useState<string[]>([])
   const [origin, setOrigin] = useState('Ручне введення')
   const controller = useRef<AbortController | null>(null)
   useEffect(() => () => controller.current?.abort(), [])
@@ -17,7 +18,7 @@ export function HriPage() {
     { key: 'solar' as const, label: 'Радіація, W/m²', min: 0, max: 1600 },
     { key: 'humidity' as const, label: 'Вологість, %', min: 0, max: 100 },
   ]
-  function resetResult() { controller.current?.abort(); setResult(null); setError(''); setLoading(false) }
+  function resetResult() { controller.current?.abort(); setResult(null); setError(''); setInvalidFields([]); setLoading(false) }
   function fromWeather(weather: Weather) {
     resetResult(); setValues({ avg_temp: String(weather.avg_temp), solar: String(weather.solar), humidity: String(weather.humidity) })
     setOrigin(`Open-Meteo · ${weather.lat.toFixed(4)}, ${weather.lon.toFixed(4)} · час показників ${new Date(weather.data_time).toLocaleString('uk-UA')} · модельні значення`)
@@ -25,7 +26,8 @@ export function HriPage() {
   async function calculate(event: FormEvent) {
     event.preventDefault(); resetResult()
     const numbers = { avg_temp: Number(values.avg_temp), solar: Number(values.solar), humidity: Number(values.humidity) }
-    if (fields.some(f => values[f.key].trim() === '' || !Number.isFinite(numbers[f.key]) || numbers[f.key] < f.min || numbers[f.key] > f.max)) { setError('Перевірте числові значення та допустимі межі.'); return }
+    const invalid = fields.filter(f => values[f.key].trim() === '' || !Number.isFinite(numbers[f.key]) || numbers[f.key] < f.min || numbers[f.key] > f.max).map(f => f.key)
+    if (invalid.length) { setInvalidFields(invalid); setError('Перевірте числові значення та допустимі межі.'); return }
     const active = new AbortController(); controller.current = active
     setLoading(true)
     try { const value = await calculateHri(numbers, active.signal); if (!active.signal.aborted) setResult(value) }
@@ -35,7 +37,7 @@ export function HriPage() {
   return <><div className="page-heading"><div><p className="eyebrow">НЕЧІТКЕ МОДЕЛЮВАННЯ</p><h1>HRI Analysis</h1><p className="subtitle">27 правил · індекс від 0 до 1 · без нейромережевого прогнозу</p></div></div>
     <section className="provenance"><strong>Індекс умов, а не ймовірність захворювання</strong><p>HRI відображає результат наявних нечітких правил. Він не є медично валідованою оцінкою здоров’я або підставою для клінічного рішення.</p></section>
     <div className="hri-layout"><section className="panel"><div className="panel-heading"><div><h2>Параметри розрахунку</h2><p>Заповніть усі поля або отримайте погоду нижче</p></div></div><form className="panel-body hri-form" onSubmit={calculate} noValidate>
-      {fields.map(field => <div className="hri-field" key={field.key}><label htmlFor={'hri-' + field.key}>{field.label}</label><input id={'hri-' + field.key} aria-describedby={'hri-help-' + field.key} type="number" step="any" min={field.min} max={field.max} required value={values[field.key]} onChange={e => { resetResult(); setOrigin('Ручне введення'); setValues(v => ({ ...v, [field.key]: e.target.value })) }} /><small id={'hri-help-' + field.key}>Межі: {field.min}…{field.max}</small></div>)}
+      {fields.map(field => <div className="hri-field" key={field.key}><label htmlFor={'hri-' + field.key}>{field.label}</label><input id={'hri-' + field.key} aria-invalid={invalidFields.includes(field.key) || undefined} aria-describedby={'hri-help-' + field.key} type="number" step="any" min={field.min} max={field.max} required value={values[field.key]} onChange={e => { resetResult(); setOrigin('Ручне введення'); setValues(v => ({ ...v, [field.key]: e.target.value })) }} /><small id={'hri-help-' + field.key}>{invalidFields.includes(field.key) && 'Введіть число в допустимому діапазоні. '}Межі: {field.min}…{field.max}</small></div>)}
       <p className="data-caption">Джерело параметрів: {origin}</p><button disabled={loading}>{loading ? 'Обчислення…' : 'Розрахувати HRI'}</button>
       {loading && <p role="status">Виконуємо розрахунок Flask HRI…</p>}{error && <p role="alert" className="inline-error">{error}</p>}
     </form></section>

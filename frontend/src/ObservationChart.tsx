@@ -11,11 +11,16 @@ export function ObservationChart({ rows }: { rows: Observation[] }) {
   useEffect(() => {
     if (!element.current) return
     const chart = echarts.init(element.current)
+    const style = getComputedStyle(element.current)
+    const ink = style.getPropertyValue('--color-muted').trim() || '#52675f'
+    const primary = style.getPropertyValue('--color-primary').trim() || '#1c6254'
     chart.setOption({
-      color: ['#27806f'], grid: { left: 50, right: 24, top: 24, bottom: 60 },
+      animation: false,
+      textStyle: { fontFamily: 'system-ui, sans-serif', color: ink, fontSize: 13 },
+      color: [primary], grid: { left: 48, right: 24, top: 32, bottom: 45 },
       tooltip: { trigger: 'axis', renderMode: 'richText' },
-      xAxis: { type: 'category', data: rows.map(r => `${r.year ?? '—'}-${String(r.month ?? '—').padStart(2, '0')}`), axisLabel: { rotate: 35 } },
-      yAxis: { type: 'value', name: '°C' },
+      xAxis: { type: 'category', data: rows.map(r => `${r.year ?? '—'}-${String(r.month ?? '—').padStart(2, '0')}`), axisLabel: { hideOverlap: true, color: ink }, axisLine: { lineStyle: { color: ink } } },
+      yAxis: { type: 'value', name: '°C', axisLabel: { color: ink }, splitLine: { lineStyle: { color: '#e5ece7', type: 'dashed' } } },
       series: [{ name: 'Середня температура', type: 'line', connectNulls: false,
         data: rows.map(r => r.avg_temp), showSymbol: true, lineStyle: { width: 2 } }],
     })

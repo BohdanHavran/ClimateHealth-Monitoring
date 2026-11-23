@@ -1,0 +1,28 @@
+{
+  "mocked_data": false,
+  "database_writes": 0,
+  "browser_exceptions": 0,
+  "dashboard_history_real_mysql": true,
+  "dashboard_weather_real_provider": true,
+  "dashboard_compact_preview": true,
+  "hri_manual_real_api": true,
+  "hri_weather_real_api": true,
+  "hri_mobile_no_overflow": true,
+  "map_real_mysql_markers": true,
+  "map_real_weather_hri": true,
+  "map_base_tiles_loaded": true,
+  "tile_fallback_notice": false,
+  "map_mobile_no_overflow": true,
+  "full_history": true,
+  "responsive_widths": [
+    320,
+    390,
+    768,
+    1024,
+    1440
+  ],
+  "text_zoom_200_percent": true,
+  "skip_link_keyboard": true,
+  "route_focus": true,
+  "status": "passed"
+}

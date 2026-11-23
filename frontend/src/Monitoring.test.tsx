@@ -26,8 +26,12 @@ describe('HRI scenario', () => {
     render(<HriPage />)
     await userEvent.click(screen.getByRole('button', { name: 'Розрахувати HRI' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Перевірте числові')
+    expect(screen.getByLabelText('Температура, °C')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText('Температура, °C')).toHaveAccessibleDescription(/Введіть число/)
     await enter(['20', '180', '150'])
     await userEvent.click(screen.getByRole('button', { name: 'Розрахувати HRI' }))
+    expect(screen.getByLabelText('Вологість, %')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText('Температура, °C')).not.toHaveAttribute('aria-invalid')
     expect(fetcher).not.toHaveBeenCalled()
   })
   it('posts numeric parameters and displays index, effective inputs and medical limitation', async () => {

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import App from './App'
 import { getObservations } from './api'
+import { HistoryPanel } from './HistoryPanel'
 
 vi.mock('./ObservationChart', () => ({ ObservationChart: () => <div>Тестова діаграма</div> }))
 afterEach(() => vi.unstubAllGlobals())
@@ -11,6 +12,35 @@ const row = { id: 1, year: 2026, month: 1, avg_temp: 3, solar_irradiance: null, 
 const response = (data = [row], next: number | null = null) => ({ ok: true, json: async () => ({ data, meta: { next_after_id: next } }) })
 
 describe('Historical observations', () => {
+  it('keeps the dashboard preview small while retaining the full history', async () => {
+    const records = Array.from({ length: 12 }, (_, index) => ({ ...row, id: index + 1 }))
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(records)))
+    const view = render(<HistoryPanel overview />)
+    await screen.findByRole('table')
+    expect(screen.getAllByRole('row')).toHaveLength(6)
+    expect(screen.getByText(/Перші 5 з 12/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Усі спостереження →' })).toHaveAttribute('href', '#history')
+    const expand = screen.getByRole('button', { name: 'Показати всі значення графіка в таблиці' })
+    await userEvent.click(expand)
+    expect(expand).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getAllByRole('row')).toHaveLength(13)
+    await userEvent.click(expand)
+    expect(screen.getAllByRole('row')).toHaveLength(6)
+    view.unmount()
+    render(<HistoryPanel />)
+    await screen.findByRole('table')
+    expect(screen.getAllByRole('row')).toHaveLength(13)
+  })
+  it('offers a keyboard skip link without changing the current route', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response()))
+    render(<App />)
+    await screen.findByRole('table')
+    await userEvent.tab()
+    expect(screen.getByRole('link', { name: 'Перейти до вмісту' })).toHaveFocus()
+    await userEvent.keyboard('{Enter}')
+    expect(screen.getByRole('main')).toHaveFocus()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Клімат у фокусі')
+  })
   it('shows loading without invented data', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
     render(<App />)

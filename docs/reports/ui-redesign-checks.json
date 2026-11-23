@@ -1,0 +1,37 @@
+[
+  {
+    "task": "lint",
+    "exit": 0,
+    "output": "\n> climate-health-frontend@0.2.0 lint\n> eslint .\n\n"
+  },
+  {
+    "task": "typecheck",
+    "exit": 0,
+    "output": "\n> climate-health-frontend@0.2.0 typecheck\n> tsc --noEmit\n\n"
+  },
+  {
+    "task": "test",
+    "exit": 0,
+    "output": "\n> climate-health-frontend@0.2.0 test\n> vitest run\n\n\n RUN  v5.1.1 D:/\u0423\u043d\u0456\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442 \u0406\u041f\u041f\u0422/\u041c\u0430\u0433\u0456\u0441\u0442\u0440\u0430\u0442\u0443\u0440\u0430 5 \u043a\u0443\u0440\u0441/\u0414\u0438\u043f\u043b\u043e\u043c/\u0414\u0438\u043f\u043b\u043e\u043c 2.0/frontend\n\n\n Test Files  2 passed (2)\n      Tests  18 passed (18)\n   Start at  17:41:10\n   Duration  3.24s (tests 73%, environment 18%, setup 5%, import 3%, transform 1%)\n\n"
+  },
+  {
+    "task": "build",
+    "exit": 0,
+    "output": "\n> climate-health-frontend@0.2.0 build\n> tsc -b && vite build\n\nvite v8.3.8 building client environment for production...\ntransforming...\n\u2713 655 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                             0.45 kB \u2502 gzip:   0.34 kB\ndist/assets/index-M9nrvtJQ.css             14.29 kB \u2502 gzip:   3.42 kB\ndist/assets/LeafletMap-vh-t_kPv.css        15.09 kB \u2502 gzip:   6.36 kB\ndist/assets/MapPage-Cg_AZO8L.js             5.51 kB \u2502 gzip:   2.30 kB\ndist/assets/LeafletMap-BFRlQlYg.js        154.31 kB \u2502 gzip:  45.49 kB\ndist/assets/index-N3QvnCEB.js             250.87 kB \u2502 gzip:  78.01 kB\ndist/assets/ObservationChart-Bh7HigJh.js  493.95 kB \u2502 gzip: 167.38 kB\n\n\u2713 built in 148ms\n"
+  },
+  {
+    "task": ".",
+    "exit": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "task": "tests/test_frontend.cjs",
+    "exit": 0,
+    "output": "PASS: 5 HTML-escaping assertions (not browser/E2E coverage)\n"
+  },
+  {
+    "task": "--check",
+    "exit": 0,
+    "output": "warning: in the working copy of 'frontend/src/App.tsx', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'frontend/src/HistoryPanel.tsx', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'frontend/src/monitoring.css', CRLF will be replaced by LF the next time Git touches it\nwarning: in the working copy of 'frontend/src/styles.css', CRLF will be replaced by LF the next time Git touches it\n"
+  }
+]
