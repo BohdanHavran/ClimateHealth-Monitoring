@@ -1,0 +1,11 @@
+<html>
+<body>
+<h1>Результати</h1>
+<table>
+<tr><th>Місяць</th><th>HRI</th>{% for c in results[0].keys() if c != 'month' and c != 'hri' %}<th>{{c}}</th>{% endfor %}</tr>
+{% for r in results %}
+<tr><td>{{r.month}}</td><td>{{r.hri}}</td>{% for c in results[0].keys() if c != 'month' and c != 'hri' %}<td>{{r[c]}}</td>{% endfor %}</tr>
+{% endfor %}
+</table>
+</body>
+</html>

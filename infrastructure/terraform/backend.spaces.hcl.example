@@ -1,0 +1,15 @@
+# EXAMPLE ONLY. Copy outside Git, replace placeholders, and choose a unique key
+# for each environment. Provide Spaces credentials via environment variables.
+bucket = "REPLACE_WITH_PRIVATE_STATE_BUCKET"
+key    = "climate-health/dev/terraform.tfstate"
+region = "us-east-1"
+endpoints = {
+  s3 = "https://fra1.digitaloceanspaces.com"
+}
+skip_credentials_validation = true
+skip_requesting_account_id  = true
+skip_metadata_api_check     = true
+skip_region_validation      = true
+skip_s3_checksum            = true
+use_lockfile                = true
+encrypt                     = true

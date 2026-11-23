@@ -1,0 +1,8 @@
+{
+  "checked_on": "2026-11-23",
+  "command": "npm audit --json",
+  "exit_code": 0,
+  "reported_vulnerabilities": {"info": 0, "low": 0, "moderate": 0, "high": 0, "critical": 0, "total": 0},
+  "registry_dependency_metadata": {"prod": 7, "dev": 256, "optional": 37, "peer": 8, "peerOptional": 0, "total": 262},
+  "note": "Summary of the actual audit response; dependency metadata includes platform optional packages. Not a guarantee of no vulnerabilities."
+}

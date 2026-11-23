@@ -1,0 +1,112 @@
+name: Application checks
+on:
+  push:
+    branches: [main, 'feature/**', 'fix/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: application-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          # Disposable runner-only credentials; never reuse in deployment.
+          MYSQL_ROOT_PASSWORD: ci-ephemeral-root-not-for-deployment # pragma: allowlist secret -- disposable CI only
+          MYSQL_DATABASE: ci_climate_test
+          MYSQL_USER: ci_test
+          MYSQL_PASSWORD: ci-ephemeral-test-not-for-deployment # pragma: allowlist secret -- disposable CI only
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+    env:
+      RUN_MYSQL_TESTS: '1'
+      MYSQL_TEST_DATABASE: ci_climate_test
+      MYSQL_TEST_USER: ci_test
+      MYSQL_TEST_PASSWORD: ci-ephemeral-test-not-for-deployment # pragma: allowlist secret -- disposable CI only
+      MYSQL_TEST_HOST: 127.0.0.1
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install project and verification dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Dependency consistency
+        run: python -m pip check
+      - name: Lint
+        run: python -m ruff check .
+      - name: Format extracted modules
+        run: python -m ruff format --check climate_data_quality.py ml_contract.py climate_health ml_service
+      - name: Unit, API and disposable MySQL tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Frontend escaping tests
+        run: node tests/test_frontend.cjs
+      - name: Validate ML OpenAPI contract
+        run: |
+          python -m openapi_spec_validator docs/api/ml.openapi.yaml
+          python -m openapi_spec_validator docs/api/backend.openapi.yaml
+      - name: Real local Backend to ML HTTP without a model
+        run: python scripts/smoke_ml_http.py
+      - name: Dependency vulnerability audit
+        run: python -m pip_audit -r requirements-ml.txt
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm audit --audit-level=high
+  container:
+    if: ${{ false }} # Phase 2: Docker execution is deferred.
+    runs-on: ubuntu-latest
+    needs: tests
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build versioned backend image without publishing
+        run: docker build --tag climate-monitoring-backend:${{ github.sha }} .
+      - name: Scan the image; fail on unfixed critical/high as well
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
+          aquasec/trivy:0.61.1 image --exit-code 1 --severity HIGH,CRITICAL
+          climate-monitoring-backend:${{ github.sha }}
+      - name: Liveness smoke test without production secrets
+        run: |
+          docker run --detach --name climate-ci --publish 127.0.0.1:8000:8000 climate-monitoring-backend:${{ github.sha }}
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:8000/health/live; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: Clean disposable container
+        if: always()
+        run: docker rm -f climate-ci || true

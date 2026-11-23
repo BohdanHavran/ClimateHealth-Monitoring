@@ -1,0 +1,11 @@
+{
+  "transport": "real Edge -> React/Vite -> Flask -> MySQL",
+  "mocked_records": false,
+  "table_visible": true,
+  "year_filter_verified": true,
+  "mobile_width": 390,
+  "no_document_horizontal_overflow": true,
+  "browser_exceptions": 0,
+  "database_writes": 0,
+  "screenshots": "local only, excluded from Git"
+}

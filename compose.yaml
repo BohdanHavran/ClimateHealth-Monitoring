@@ -1,0 +1,31 @@
+name: climate-health
+services:
+  backend:
+    build: .
+    image: climate-monitoring-backend:local
+    environment:
+      DB_HOST: ${DB_HOST:?Set existing MySQL host in local .env}
+      DB_USER: ${DB_USER:-climate_app}
+      DB_NAME: ${DB_NAME:?Set inspected database name in local .env}
+      DB_PASS_FILE: /run/secrets/db_password
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
+    secrets: [db_password]
+    ports: ["127.0.0.1:8000:8000"]
+    networks: [outbound]
+    read_only: true
+    tmpfs: ["/tmp:size=134217728,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+networks:
+  outbound: {}
+secrets:
+  db_password:
+    file: ${DB_PASSWORD_FILE:-./.secrets/db_password}

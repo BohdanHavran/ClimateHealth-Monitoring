@@ -1,0 +1,28 @@
+{
+  "transport": "real loopback HTTP",
+  "database_probe": "SELECT 1 only",
+  "database_writes": 0,
+  "external_weather_calls": 0,
+  "routes": [
+    {
+      "path": "/health/live",
+      "http_status": 200
+    },
+    {
+      "path": "/health/ready",
+      "http_status": 200
+    },
+    {
+      "path": "/",
+      "http_status": 200
+    },
+    {
+      "path": "/map",
+      "http_status": 200
+    },
+    {
+      "path": "/static/js/safe-html.js",
+      "http_status": 200
+    }
+  ]
+}

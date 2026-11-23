@@ -1,0 +1,62 @@
+# Local secrets, including legacy archives containing credentials
+.env
+.env.*
+!.env.example
+.secrets/
+*.pem
+*.key
+*.p12
+course.zip
+*.zip
+
+# Python and local tooling
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.idea/
+.vscode/
+
+# Private/unknown provenance datasets and generated models
+climate_change_dataset.csv
+data/raw/
+data/processed/
+*.pt
+*.pth
+*.onnx
+*.keras
+*.h5
+*.log
+backups/
+
+# Terraform state/plans may contain secrets
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Future frontend builds
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.local-verification/
+.tools/
+
+# Local inspection metadata and Graphify extraction cache
+docs/mysql-inspection.json
+docs/graphify/.cache/
+docs/graphify/graph.html
+docs/graphify/graph.json

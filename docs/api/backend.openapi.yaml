@@ -1,0 +1,156 @@
+openapi: 3.0.3
+info:
+  title: ClimateHealth Flask API
+  version: 0.2.0
+  description: >-
+    JSON API другої фази. MySQL тільки для читання. Походження й територію
+    історичних записів не підтверджено. HRI не є медичним прогнозом.
+servers:
+  - url: http://127.0.0.1:8000
+paths:
+  /api/v1/status:
+    get:
+      summary: Стан HTTP-системи без запиту БД
+      responses:
+        '200': {description: Статус і чесна недоступність моделі}
+        '429': {$ref: '#/components/responses/RateLimited'}
+  /api/v1/schema:
+    get:
+      summary: Мінімальна перевірка стовпців існуючої MySQL через information_schema
+      responses:
+        '200': {description: Потрібні стовпці доступні}
+        '503': {$ref: '#/components/responses/Unavailable'}
+        '429': {$ref: '#/components/responses/RateLimited'}
+  /api/v1/observations:
+    get:
+      summary: Збережені кліматичні показники для таблиці та графіка
+      description: >-
+        Порядок id ASC; keyset cursor next_after_id або null. Дані не імпутуються.
+        Не скінченні чи фізично некоректні значення повертаються null із quality_issues.
+        Пропуски не є нулями. Географія unspecified. Великі вибірки отримувати сторінками.
+      parameters:
+        - {in: query, name: year, schema: {type: integer, minimum: 1800, maximum: 2200}}
+        - {in: query, name: month, schema: {type: integer, minimum: 1, maximum: 12}}
+        - {in: query, name: limit, schema: {type: integer, minimum: 1, maximum: 200, default: 50}}
+        - {in: query, name: after_id, schema: {type: integer, format: int64, minimum: 0, default: 0}}
+      responses:
+        '200':
+          description: Сторінка спостережень, зокрема порожній список
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data: {type: array, maxItems: 200, items: {$ref: '#/components/schemas/Observation'}}
+                  meta:
+                    type: object
+                    required: [api_version, next_after_id, limit, source, geography, units]
+                    properties:
+                      api_version: {type: string, enum: [v1]}
+                      next_after_id: {type: integer, format: int64, nullable: true}
+                      limit: {type: integer}
+                      source: {type: string, enum: ['mysql:climate_data']}
+                      geography: {type: string, enum: [unspecified]}
+                      units: {type: object, additionalProperties: {type: string}}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/v1/places:
+    get:
+      summary: Населені пункти в заданих межах для картографії
+      parameters:
+        - {in: query, name: south, required: true, schema: {type: number, minimum: -90, maximum: 90}}
+        - {in: query, name: north, required: true, schema: {type: number, minimum: -90, maximum: 90}}
+        - {in: query, name: west, required: true, schema: {type: number, minimum: -180, maximum: 180}}
+        - {in: query, name: east, required: true, schema: {type: number, minimum: -180, maximum: 180}}
+        - {in: query, name: limit, schema: {type: integer, minimum: 1, maximum: 1000, default: 100}}
+      responses:
+        '200': {description: 'data зі списком id/name/lat/lon/population; максимум limit, без твердження про повноту регіону'}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/v1/hri:
+    post:
+      summary: Чисте нечітке обчислення без доступу до БД
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [avg_temp, solar, humidity]
+              properties:
+                avg_temp: {type: number, minimum: -100, maximum: 70}
+                solar: {type: number, minimum: 0, maximum: 1600}
+                humidity: {type: number, minimum: 0, maximum: 100}
+      responses:
+        '200': {description: 'data.hri, inputs, effective_inputs, clipped, method=fuzzy_rules_27, medical_prediction=false'}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '413': {description: Тіло понад 256 KiB}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/v1/weather:
+    get:
+      summary: Поточна погода за містом через OpenWeather з TTL 300 секунд
+      description: solar є апроксимацією за хмарністю, а не виміряною радіацією.
+      parameters:
+        - {in: query, name: city, required: true, schema: {type: string, minLength: 1, maxLength: 100}}
+      responses:
+        '200': {description: 'data.avg_temp/solar/humidity та meta.source/solar_method/cache_ttl_seconds'}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/v1/predictions:
+    post:
+      summary: Flask → локальний автентифікований ML-сервіс
+      description: >-
+        Структура запиту як у ml.openapi.yaml PredictRequest; підтримано
+        feature_schema_version=climate-v1. Відповідь у data, meta.api_version=v1.
+        Моделі немає, доступні лише відмови; value/model_version завжди null.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: './ml.openapi.yaml#/components/schemas/PredictRequest'}
+      responses:
+        '400': {$ref: '#/components/responses/Invalid'}
+        '413': {description: Тіло понад 256 KiB}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '503': {description: data.reason model_unavailable/service_timeout/service_unavailable/service_not_configured/service_configuration_invalid/model_contract_mismatch; data.value=null}
+components:
+  schemas:
+    Observation:
+      type: object
+      required: [id, year, month, avg_temp, solar_irradiance, humidity, quality_issues]
+      properties:
+        id: {type: integer, format: int64}
+        year: {type: integer, nullable: true}
+        month: {type: integer, nullable: true}
+        avg_temp: {type: number, nullable: true, description: degC}
+        solar_irradiance: {type: number, nullable: true, description: W/m2 за договором існуючого застосунку; первинне джерело не верифіковане}
+        humidity: {type: number, nullable: true, description: percent}
+        quality_issues: {type: array, items: {type: string}}
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: {type: string}
+            message: {type: string}
+  responses:
+    Invalid:
+      description: Некоректний запит
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    Unavailable:
+      description: Залежність або сумісна схема недоступні; деталі винятку приховано
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+    RateLimited:
+      description: Локальний ліміт 60 запитів за 60 секунд на IP і процес
+      headers:
+        Retry-After: {schema: {type: string}, description: 60 секунд}
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}

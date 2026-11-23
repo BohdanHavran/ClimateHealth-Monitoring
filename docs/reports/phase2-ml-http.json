@@ -1,0 +1,8 @@
+{
+  "fixture": "synthetic technical test only",
+  "backend_status": 503,
+  "ml_reason": "model_unavailable",
+  "value": null,
+  "database_access": false,
+  "transport": "real loopback Flask -> authenticated FastAPI HTTP"
+}

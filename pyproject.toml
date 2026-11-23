@@ -1,0 +1,8 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = [".venv", "docs/graphify"]
+
+[tool.ruff.lint]
+# Start with syntax/undefined-name checks; broader style refactors are separate.
+select = ["E9", "F63", "F7", "F82"]

@@ -1,0 +1,43 @@
+# OPTIONAL isolated fresh MySQL, only if explicitly requested.
+# Normal compose.yaml uses the existing MySQL and does not start this service.
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-climate_db}
+      MYSQL_USER: ${MYSQL_USER:-climate_app}
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+    secrets: [mysql_password, mysql_root_password]
+    volumes:
+      - mysql_isolated_data:/var/lib/mysql
+      - ./infrastructure/docker/mysql-init:/docker-entrypoint-initdb.d:ro
+    networks: [database]
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1, --silent]
+      interval: 10s
+      timeout: 5s
+      start_period: 45s
+      retries: 10
+    mem_limit: 1g
+  backend:
+    environment:
+      DB_HOST: mysql
+      DB_USER: ${MYSQL_USER:-climate_app}
+      DB_NAME: ${MYSQL_DATABASE:-climate_db}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks: [outbound, database]
+networks:
+  database:
+    internal: true
+volumes:
+  mysql_isolated_data: {}
+secrets:
+  db_password:
+    file: ${MYSQL_PASSWORD_FILE:-./.secrets/mysql_password}
+  mysql_password:
+    file: ${MYSQL_PASSWORD_FILE:-./.secrets/mysql_password}
+  mysql_root_password:
+    file: ${MYSQL_ROOT_PASSWORD_FILE:-./.secrets/mysql_root_password}

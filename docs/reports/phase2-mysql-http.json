@@ -1,0 +1,37 @@
+{
+  "database_writes": 0,
+  "schema_writes": 0,
+  "transport": "real HTTP",
+  "checks": [
+    {
+      "path": "/health/ready",
+      "status": 200,
+      "rows_returned": null
+    },
+    {
+      "path": "/api/v1/status",
+      "status": 200,
+      "rows_returned": null
+    },
+    {
+      "path": "/api/v1/schema",
+      "status": 200,
+      "rows_returned": null
+    },
+    {
+      "path": "/api/v1/observations?limit=5",
+      "status": 200,
+      "rows_returned": 5
+    },
+    {
+      "path": "/api/v1/places?south=44&north=53&west=22&east=41&limit=5",
+      "status": 200,
+      "rows_returned": 5
+    },
+    {
+      "path": "/api/places_in_bounds?minLat=44&maxLat=53&minLon=22&maxLon=41&limit=5",
+      "status": 200,
+      "rows_returned": 5
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+[
+  {
+    "command": [
+      "D:\\Університет ІППТ\\Магістратура 5 курс\\Диплом\\Диплом 2.0\\.venv\\Scripts\\python.exe",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-v"
+    ],
+    "result": 0,
+    "stdout": "",
+    "stderr": "test_empty_and_nonfinite_values_are_rejected (test_data_quality.DataQualityTests.test_empty_and_nonfinite_values_are_rejected) ... ok\ntest_missing_invalid_and_nonfinite (test_data_quality.DataQualityTests.test_missing_invalid_and_nonfinite) ... ok\ntest_profile_checks_pairs_with_missing_values_and_preserves_source (test_data_quality.DataQualityTests.test_profile_checks_pairs_with_missing_values_and_preserves_source) ... ok\ntest_reject_unavailable_or_ambiguous_time (test_data_quality.DataQualityTests.test_reject_unavailable_or_ambiguous_time) ... ok\ntest_valid_timestamp_and_finite_observation (test_data_quality.DataQualityTests.test_valid_timestamp_and_finite_observation) ... ok\ntest_value_is_not_clipped_or_silently_changed (test_data_quality.DataQualityTests.test_value_is_not_clipped_or_silently_changed) ... ok\ntest_iso_timestamp_requires_event_timezone (test_ml_contract.ContractTests.test_iso_timestamp_requires_event_timezone) ... ok\ntest_no_model_never_returns_zero_or_prediction (test_ml_contract.ContractTests.test_no_model_never_returns_zero_or_prediction) ... ok\ntest_nonfinite_invalid_feature_and_duplicate_rejected (test_ml_contract.ContractTests.test_nonfinite_invalid_feature_and_duplicate_rejected) ... ok\ntest_time_leak_and_ambiguous_dates_rejected (test_ml_contract.ContractTests.test_time_leak_and_ambiguous_dates_rejected) ... ok\ntest_unknown_fields_and_missing_features_rejected (test_ml_contract.ContractTests.test_unknown_fields_and_missing_features_rejected) ... ok\ntest_invalid_month_is_rejected (test_mysql_integration.MySQLIntegration.test_invalid_month_is_rejected) ... skipped 'isolated CI MySQL not enabled'\ntest_parameterized_climate_insert_and_read (test_mysql_integration.MySQLIntegration.test_parameterized_climate_insert_and_read) ... skipped 'isolated CI MySQL not enabled'\ntest_required_tables_exist (test_mysql_integration.MySQLIntegration.test_required_tables_exist) ... skipped 'isolated CI MySQL not enabled'\ntest_analysis_database_error_is_redacted_and_not_masked_by_rollback (test_routes.RoutesTest.test_analysis_database_error_is_redacted_and_not_masked_by_rollback) ... [2026-11-23 10:42:21,098] ERROR in climat: Analysis failed due to unavailable dependency or invalid source data\nok\ntest_invalid_analysis_inputs_rejected_before_database (test_routes.RoutesTest.test_invalid_analysis_inputs_rejected_before_database) ... ok\ntest_invalid_coordinates_and_limits_are_rejected_before_database (test_routes.RoutesTest.test_invalid_coordinates_and_limits_are_rejected_before_database) ... ok\ntest_liveness_does_not_touch_database (test_routes.RoutesTest.test_liveness_does_not_touch_database) ... ok\ntest_missing_secret_file_fails_closed_without_leaking_path (test_routes.RoutesTest.test_missing_secret_file_fails_closed_without_leaking_path) ... ok\ntest_missing_secret_is_rejected_without_fallback (test_routes.RoutesTest.test_missing_secret_is_rejected_without_fallback) ... ok\ntest_mysql_connection_uses_bounded_timeouts_and_selected_port (test_routes.RoutesTest.test_mysql_connection_uses_bounded_timeouts_and_selected_port) ... ok\ntest_nonfinite_cached_data_is_unavailable (test_routes.RoutesTest.test_nonfinite_cached_data_is_unavailable) ... [2026-11-23 10:42:21,105] ERROR in climat: HRI lookup failed due to unavailable dependency or invalid source data\n[2026-11-23 10:42:21,105] ERROR in climat: HRI lookup failed due to unavailable dependency or invalid source data\n[2026-11-23 10:42:21,106] ERROR in climat: HRI lookup failed due to unavailable dependency or invalid source data\n[2026-11-23 10:42:21,106] ERROR in climat: HRI lookup failed due to unavailable dependency or invalid source data\nok\ntest_password_file_takes_precedence_and_has_a_size_limit (test_routes.RoutesTest.test_password_file_takes_precedence_and_has_a_size_limit) ... ok\ntest_readiness_probes_database (test_routes.RoutesTest.test_readiness_probes_database) ... ok\ntest_readiness_reports_database_failure_without_details (test_routes.RoutesTest.test_readiness_reports_database_failure_without_details) ... [2026-11-23 10:42:21,111] WARNING in climat: Readiness check failed: database unavailable\nok\ntest_valid_cached_result_remains_compatible (test_routes.RoutesTest.test_valid_cached_result_remains_compatible) ... ok\ntest_valid_manual_analysis_contract (test_routes.RoutesTest.test_valid_manual_analysis_contract) ... ok\n\n----------------------------------------------------------------------\nRan 27 tests in 0.130s\n\nOK (skipped=3)\n"
+  },
+  {
+    "command": [
+      "D:\\Університет ІППТ\\Магістратура 5 курс\\Диплом\\Диплом 2.0\\.venv\\Scripts\\python.exe",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "result": 0,
+    "stdout": "No broken requirements found.\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "D:\\Університет ІППТ\\Магістратура 5 курс\\Диплом\\Диплом 2.0\\.venv\\Scripts\\python.exe",
+      "-m",
+      "ruff",
+      "check",
+      "."
+    ],
+    "result": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "D:\\Університет ІППТ\\Магістратура 5 курс\\Диплом\\Диплом 2.0\\.venv\\Scripts\\python.exe",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "climate_data_quality.py",
+      "ml_contract.py"
+    ],
+    "result": 0,
+    "stdout": "2 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "D:\\Університет ІППТ\\Магістратура 5 курс\\Диплом\\Диплом 2.0\\.venv\\Scripts\\python.exe",
+      "-m",
+      "openapi_spec_validator",
+      "docs/api/ml.openapi.yaml"
+    ],
+    "result": 0,
+    "stdout": "docs/api/ml.openapi.yaml: OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "C:/Users/danoh/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe",
+      "tests/test_frontend.cjs"
+    ],
+    "result": 0,
+    "stdout": "PASS: 5 HTML-escaping assertions (not browser/E2E coverage)\n",
+    "stderr": ""
+  }
+]

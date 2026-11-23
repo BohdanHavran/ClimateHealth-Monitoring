@@ -1,0 +1,118 @@
+openapi: 3.0.3
+info:
+  title: Контракт прогнозного ML-сервісу
+  version: 0.2.0
+  description: >-
+    Локальний HTTP-сервіс реалізовано лише для валідації, bearer auth і чесної
+    відмови 503 model_unavailable. Навченої моделі та медичної точності немає.
+    Відповідь 200 залишається майбутнім контрактом, поточний сервіс її не видає.
+    Підтримано feature_schema_version=climate-v1. Синтетичні приклади лише тестові.
+servers:
+  - url: https://ml.internal.example
+    description: Лише приватний адресний простір; приклад, не робочий хост.
+paths:
+  /api/v1/predict:
+    post:
+      operationId: predictAggregatedHealthOutcome
+      summary: Запит прогнозу для узгодженої території та цілі
+      security:
+        - serviceBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictRequest'
+      responses:
+        '200':
+          description: Доступний прогноз, сформований перевіреною сумісною моделлю.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailablePrediction'
+        '401':
+          description: Автентифікація відсутня або не пройдена.
+        '403':
+          description: Клієнт не авторизований для цієї операції.
+        '422':
+          description: Некоректні ознаки, час, горизонт або версія контракту.
+        '503':
+          description: Модель, сумісні дані або залежність недоступні; значення не обчислено.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnavailablePrediction'
+components:
+  securitySchemes:
+    serviceBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque service credential
+      description: >-
+        Приклад схеми. Взаємна автентифікація, ротація ключів, TLS,
+        перевірка прав і розміщення за приватною мережею обов'язкові для
+        розгортання; рішення про секрети та спосіб автентифікації потребує ADR.
+  schemas:
+    PredictRequest:
+      type: object
+      additionalProperties: false
+      required: [region_id, issue_time, horizon_days, feature_schema_version, features]
+      properties:
+        region_id: {type: string, minLength: 1, maxLength: 128}
+        issue_time:
+          type: string
+          format: date-time
+          description: ISO 8601 з UTC-зсувом; момент видачі прогнозу.
+        horizon_days:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: Проєктне обмеження контракту; фактична модель може підтримувати менше.
+        feature_schema_version: {type: string, minLength: 1, maxLength: 64}
+        features:
+          type: array
+          minItems: 1
+          maxItems: 512
+          items:
+            $ref: '#/components/schemas/Feature'
+      description: >-
+        Усі values мають бути скінченними JSON-числами. available_at кожної
+        ознаки не пізніше issue_time; сервер додатково перевіряє походження,
+        доступність, унікальність, діапазони, одиниці, порядок і версію схеми.
+        Відсутність значень не прирівнюється до нуля.
+    Feature:
+      type: object
+      additionalProperties: false
+      required: [name, value, unit, event_time, available_at, source]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 128}
+        value: {type: number, format: double, description: Лише скінченне значення; NaN та ±Infinity відхиляються.}
+        unit: {type: string, minLength: 1, maxLength: 64}
+        event_time: {type: string, format: date-time, description: Час події із UTC-зсувом.}
+        available_at: {type: string, format: date-time, description: Час публікації або доступності із UTC-зсувом.}
+        source: {type: string, minLength: 1, maxLength: 128}
+    AvailablePrediction:
+      type: object
+      additionalProperties: false
+      required: [status, target, value, unit, model_version, issued_at, data_quality]
+      properties:
+        status: {type: string, enum: [available]}
+        target: {type: string, minLength: 1}
+        value: {type: number, format: double, minimum: 0}
+        unit: {type: string, minLength: 1}
+        model_version: {type: string, minLength: 1}
+        issued_at: {type: string, format: date-time}
+        data_quality: {type: string, enum: [valid, degraded]}
+    UnavailablePrediction:
+      type: object
+      additionalProperties: false
+      required: [status, target, value, unit, model_version, issued_at, data_quality, reason]
+      properties:
+        status: {type: string, enum: [unavailable]}
+        target: {type: string, nullable: true}
+        value: {type: number, nullable: true, enum: [null]}
+        unit: {type: string, nullable: true}
+        model_version: {type: string, nullable: true}
+        issued_at: {type: string, format: date-time}
+        data_quality: {type: string, enum: [unavailable, invalid, insufficient]}
+        reason: {type: string, enum: [model_unavailable, insufficient_data, incompatible_features, inference_error, dependency_timeout]}

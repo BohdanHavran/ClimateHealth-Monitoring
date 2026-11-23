@@ -1,0 +1,7 @@
+{
+  "yaml_syntax": "passed",
+  "docker_and_terraform_jobs_disabled": true,
+  "active_jobs_without_infrastructure_commands": true,
+  "home_database_not_in_workflows": true,
+  "remote_execution": false
+}

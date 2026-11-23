@@ -1,0 +1,12 @@
+# Allowlist: archives, private data, .env and backups never enter build context.
+**
+!Dockerfile
+!requirements.txt
+!climat.py
+!ml_contract.py
+!climate_health/
+!climate_health/**
+!templates/
+!templates/**
+!static/
+!static/**

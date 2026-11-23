@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Інформація</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .hero {
+            background: radial-gradient(1200px circle at 20% 10%, rgba(13,110,253,.25), transparent 60%),
+                        radial-gradient(900px circle at 80% 30%, rgba(25,135,84,.22), transparent 55%),
+                        linear-gradient(135deg, rgba(33,37,41,1), rgba(23,27,31,1));
+            color: #fff;
+            border-radius: 1.25rem;
+        }
+        .mini-card {
+            border: 0;
+            border-radius: 1.25rem;
+        }
+        .mini-chart {
+            height: 170px;
+        }
+        .muted { opacity: .85; }
+    </style>
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fas fa-heartbeat me-2"></i>Climate Health</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="/">Інформація</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/analyze">Аналіз</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/map">Карта</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="p-4 p-md-5 hero shadow">
+            <div class="row align-items-center g-4">
+                <div class="col-md-8">
+                    <h1 class="display-6 mb-2"><i class="fas fa-cloud-sun-rain me-2"></i>Моніторинг впливу клімату на здоровʼя</h1>
+                    <p class="lead muted mb-3">
+                        Система оцінює <b>індекс ризику для здоровʼя (HRI)</b> на основі температури, сонячної радіації та вологості.
+                        Розрахунок виконано через <b>нечітку логіку</b>: кожен параметр потрапляє в «низький/середній/високий» діапазон з певною мірою, а правила формують інтегральний ризик.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="/analyze" class="btn btn-primary"><i class="fas fa-chart-line me-2"></i>Перейти до аналізу</a>
+                        <a href="#how" class="btn btn-outline-light"><i class="fas fa-book-open me-2"></i>Як це працює</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mini-card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small">Шкала HRI</div>
+                                    <div class="h4 mb-0">0.00 → 1.00</div>
+                                </div>
+                                <i class="fas fa-gauge-high fa-2x text-primary"></i>
+                            </div>
+                            <div class="mt-3">
+                                <div class="progress" style="height: 14px; border-radius: 999px;">
+                                    <div class="progress-bar" style="width: 30%" aria-label="low"></div>
+                                    <div class="progress-bar bg-success" style="width: 40%" aria-label="medium"></div>
+                                    <div class="progress-bar bg-warning" style="width: 30%" aria-label="high"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2 small text-muted">
+                                    <span>Low ≤ 0.30</span>
+                                    <span>Medium ≤ 0.70</span>
+                                    <span>High &gt; 0.70</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+            <div class="col-md-4">
+                <div class="card mini-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h5 class="mb-0"><i class="fas fa-temperature-high me-2 text-danger"></i>Температура</h5>
+                            <span class="badge text-bg-light">-5…35°C</span>
+                        </div>
+                        <p class="text-muted mb-0">Спека підвищує ризик теплового стресу, зневоднення та загострень серцево-судинних станів; холод — ризик переохолодження та загострень респіраторних.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mini-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h5 class="mb-0"><i class="fas fa-sun me-2 text-warning"></i>Сонячна радіація</h5>
+                            <span class="badge text-bg-light">60…300</span>
+                        </div>
+                        <p class="text-muted mb-0">Висока радіація/UV підсилює ризики опіків, перегріву та проблем із зором. Важливі: SPF, окуляри, уникнення піків 10:00–16:00.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mini-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h5 class="mb-0"><i class="fas fa-droplet me-2 text-primary"></i>Вологість</h5>
+                            <span class="badge text-bg-light">30…100%</span>
+                        </div>
+                        <p class="text-muted mb-0">Висока вологість ускладнює охолодження тіла (відчуття «духоти»), низька — сушить слизові та шкіру. Оптимально часто 40–60%.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-1" id="how">
+            <div class="col-lg-6">
+                <div class="card mini-card shadow-sm h-100">
+                    <div class="card-body">
+                        <h4 class="mb-3"><i class="fas fa-diagram-project me-2"></i>Як формується HRI (дуже коротко)</h4>
+                        <ol class="mb-0">
+                            <li>Кожен показник переводиться в <b>ступені належності</b> до «low/medium/high».</li>
+                            <li>Набір правил (комбінації low/medium/high) дає проміжний ризик.</li>
+                            <li>Результат дефазифікується в число <b>0…1</b> та інтерпретується як рівень ризику.</li>
+                        </ol>
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <small><i class="fas fa-triangle-exclamation me-1"></i>Це навчально-інформаційний інструмент, не медичний діагноз. За симптомів — звертайтесь до лікаря.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card mini-card shadow-sm h-100">
+                    <div class="card-body">
+                        <h4 class="mb-3"><i class="fas fa-database me-2"></i>Звідки беруться дані</h4>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <div class="d-flex align-items-start gap-3">
+                                    <i class="fas fa-table text-primary mt-1"></i>
+                                    <div>
+                                        <div class="fw-semibold">База даних</div>
+                                        <div class="text-muted small">Історичні місячні значення для порівняння та трендів.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-start gap-3">
+                                    <i class="fas fa-keyboard text-success mt-1"></i>
+                                    <div>
+                                        <div class="fw-semibold">Ручний ввід</div>
+                                        <div class="text-muted small">Для сценаріїв «що буде, якщо…» або якщо сенсори/БД недоступні.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-start gap-3">
+                                    <i class="fas fa-cloud-arrow-down text-warning mt-1"></i>
+                                    <div>
+                                        <div class="fw-semibold">Поточні дані з API</div>
+                                        <div class="text-muted small">Актуальна погода для міста + приблизна сонячна радіація через хмарність.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <a class="btn btn-outline-primary" href="/analyze"><i class="fas fa-play me-2"></i>Спробувати зараз</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="mt-4 mb-2"><i class="fas fa-chart-area me-2"></i>Міні-графіки (пояснювальні)</h3>
+        <p class="text-muted mb-3">Нижче — маленькі графіки членства (triangular membership). Вони показують, як значення параметра «розмазується» між low/medium/high у нечіткій моделі.</p>
+
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="card mini-card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h6 class="mb-0">Температура</h6>
+                            <span class="badge text-bg-light">°C</span>
+                        </div>
+                        <div class="mini-chart mt-2"><canvas id="chartTemp"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card mini-card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h6 class="mb-0">Сонячна радіація</h6>
+                            <span class="badge text-bg-light">W/m²</span>
+                        </div>
+                        <div class="mini-chart mt-2"><canvas id="chartSolar"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card mini-card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h6 class="mb-0">Вологість</h6>
+                            <span class="badge text-bg-light">%</span>
+                        </div>
+                        <div class="mini-chart mt-2"><canvas id="chartHumidity"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card mini-card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h6 class="mb-0">HRI</h6>
+                            <span class="badge text-bg-light">0…1</span>
+                        </div>
+                        <div class="mini-chart mt-2"><canvas id="chartHri"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion mt-4" id="criteriaAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTemp">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTemp">
+                        Детальніше: Температура
+                    </button>
+                </h2>
+                <div id="collapseTemp" class="accordion-collapse collapse show">
+                    <div class="accordion-body">
+                        Висока температура може спричиняти тепловий стрес, загострення серцево-судинних і ниркових проблем, порушення сну та зростання ризику зневоднення.
+                        Низька температура — підвищує ризик переохолодження, бронхоспазму та ускладнень у людей із хронічними респіраторними захворюваннями.
+                        <div class="mt-2"><b>Поради:</b> пийте воду, уникайте піку спеки, підбирайте одяг по сезону, контролюйте навантаження.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingSolar">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSolar">
+                        Детальніше: Сонячна радіація (UV)
+                    </button>
+                </h2>
+                <div id="collapseSolar" class="accordion-collapse collapse">
+                    <div class="accordion-body">
+                        Високий рівень UV підвищує ризик сонячних опіків, фотостаріння та пошкодження очей.
+                        Водночас помірна інсоляція сприяє синтезу вітаміну D.
+                        <div class="mt-2"><b>Поради:</b> SPF 30+, окуляри з UV-фільтром, головний убір, тінь у години 10:00–16:00.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingHumidity">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHumidity">
+                        Детальніше: Вологість
+                    </button>
+                </h2>
+                <div id="collapseHumidity" class="accordion-collapse collapse">
+                    <div class="accordion-body">
+                        Висока вологість ускладнює випаровування поту та підсилює відчуття спеки.
+                        Низька вологість провокує сухість слизових і шкіри та може посилювати симптоми алергій.
+                        <div class="mt-2"><b>Поради:</b> провітрювання, кондиціонер/осушувач при надмірній вологості, зволожувач при сухості, контроль цвілі.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center text-muted mt-4 mb-4">
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        // Прості «трикутні» функції членства (для наочності)
+        function tri(x, a, b, c) {
+            if (x <= a || x >= c) return 0;
+            if (x === b) return 1;
+            if (x < b) return (x - a) / (b - a);
+            return (c - x) / (c - b);
+        }
+
+        function buildSeries(xs, params) {
+            return xs.map(x => ({ x, y: tri(x, params[0], params[1], params[2]) }));
+        }
+
+        function makeMiniChart(elId, xs, series) {
+            const ctx = document.getElementById(elId);
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: series.map(s => ({
+                        label: s.label,
+                        data: s.data,
+                        tension: 0,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, labels: { boxWidth: 12 } } },
+                    scales: {
+                        x: { type: 'linear', grid: { display: false } },
+                        y: { min: 0, max: 1, ticks: { stepSize: 0.5 } }
+                    }
+                }
+            });
+        }
+
+        // Температура: low [-5,0,5], medium [5,12.5,20], high [20,30,35]
+        const xsTemp = [];
+        for (let x = -5; x <= 35; x += 1) xsTemp.push(x);
+        makeMiniChart('chartTemp', xsTemp, [
+            { label: 'low', data: buildSeries(xsTemp, [-5,0,5]) },
+            { label: 'medium', data: buildSeries(xsTemp, [5,12.5,20]) },
+            { label: 'high', data: buildSeries(xsTemp, [20,30,35]) },
+        ]);
+
+        // Solar: low [60,100,140], medium [140,180,220], high [220,260,300]
+        const xsSolar = [];
+        for (let x = 60; x <= 300; x += 5) xsSolar.push(x);
+        makeMiniChart('chartSolar', xsSolar, [
+            { label: 'low', data: buildSeries(xsSolar, [60,100,140]) },
+            { label: 'medium', data: buildSeries(xsSolar, [140,180,220]) },
+            { label: 'high', data: buildSeries(xsSolar, [220,260,300]) },
+        ]);
+
+        // Humidity: low [30,40,50], medium [50,65,80], high [80,90,100]
+        const xsHum = [];
+        for (let x = 30; x <= 100; x += 1) xsHum.push(x);
+        makeMiniChart('chartHumidity', xsHum, [
+            { label: 'low', data: buildSeries(xsHum, [30,40,50]) },
+            { label: 'medium', data: buildSeries(xsHum, [50,65,80]) },
+            { label: 'high', data: buildSeries(xsHum, [80,90,100]) },
+        ]);
+
+        // HRI: low [0,0.15,0.3], medium [0.3,0.5,0.7], high [0.7,0.85,1]
+        const xsHri = [];
+        for (let x = 0; x <= 1.0; x += 0.02) xsHri.push(Number(x.toFixed(2)));
+        makeMiniChart('chartHri', xsHri, [
+            { label: 'low', data: buildSeries(xsHri, [0,0.15,0.3]) },
+            { label: 'medium', data: buildSeries(xsHri, [0.3,0.5,0.7]) },
+            { label: 'high', data: buildSeries(xsHri, [0.7,0.85,1]) },
+        ]);
+    </script>
+</body>
+</html>

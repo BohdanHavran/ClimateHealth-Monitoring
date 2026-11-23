@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Карта HRI</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <style>
+    #map { height: calc(100vh - 170px); border-radius: 14px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; display:inline-block; margin-right:8px; }
+    .badge-soft { background: rgba(0,0,0,.08); color: #111; }
+  </style>
+</head>
+
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="/"><i class="fa-solid fa-heart-pulse me-2"></i>Climate Health</a>
+    <div class="navbar-nav ms-auto">
+      <a class="nav-link" href="/">Інформація</a>
+      <a class="nav-link" href="/analyze">Аналіз</a>
+      <a class="nav-link active" aria-current="page" href="/map">Карта</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container my-3">
+  <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+    <div>
+      <h3 class="mb-1">Карта впливу клімату на здоровʼя (HRI)</h3>
+      <div class="text-muted">
+        Точки беруться з БД (по bounds). HRI рахується з API, кешується у БД.
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button id="btnReload" class="btn btn-primary">Оновити точки</button>
+      <button id="btnToggleHeat" class="btn btn-outline-primary">Heatmap: увімк.</button>
+      <button id="btnWarm" class="btn btn-outline-secondary">Підігріти зараз</button>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-lg-8">
+      <div id="map" class="shadow"></div>
+      <div class="mt-2 text-muted small">
+        Порада: збільшуй масштаб — буде більше населених пунктів. Автопідігрів працює лише з певного zoom.
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm" style="border-radius:14px;">
+        <div class="card-body">
+          <h5 class="mb-2">Легенда</h5>
+          <div class="mb-3">
+            <div><span class="legend-dot" style="background:#2ecc71"></span>Low (≤ 0.30)</div>
+            <div><span class="legend-dot" style="background:#f1c40f"></span>Medium (≤ 0.70)</div>
+            <div><span class="legend-dot" style="background:#e74c3c"></span>High (&gt; 0.70)</div>
+            <div class="mt-2"><span class="legend-dot" style="background:#6c757d"></span>Невідомо (HRI ще не рахувався)</div>
+          </div>
+
+          <h5 class="mb-2">Деталі точки</h5>
+          <div id="details" class="text-muted">Натисни на маркер або клікни по карті.</div>
+        </div>
+      </div>
+
+      <div class="alert alert-warning mt-3">
+        <small>Це інформаційний індекс. За симптомів — звернись до лікаря.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://kit.fontawesome.com/a2e0e6ad49.js" crossorigin="anonymous"></script>
+
+<script src="{{ url_for('static', filename='js/safe-html.js') }}"></script>
+<script>
+  // ======================
+  // Налаштування (Варіант A)
+  // ======================
+  const AUTO_WARMUP_ENABLED = false;    // зовнішні API-запити лише після явної дії
+  const AUTO_WARMUP_N = 60;             // скільки точок порахувати автоматично у viewport
+  const AUTO_WARMUP_MIN_ZOOM = 7;       // щоб не стріляти API на занадто далекому масштабі
+  const AUTO_WARMUP_COOLDOWN_MS = 15000;// щоб не викликати авто-підігрів на кожен рух карти
+
+  // ===== Map init =====
+  const map = L.map('map').setView([49.0, 31.0], 6); // Україна
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  const markersLayer = L.layerGroup().addTo(map);
+
+  let heatLayer = L.heatLayer([], { radius: 28, blur: 18, maxZoom: 9 });
+  let heatEnabled = true;
+  heatLayer.addTo(map);
+
+  // ===== State =====
+  let currentPlaces = [];
+  const hriById = new Map();     // id -> {hri, level, lat, lon}
+  const markerById = new Map();  // id -> circleMarker
+  let clickMarker = null;
+
+  let lastAutoWarmAt = 0;
+  let isWarming = false;
+
+  // ===== UI helpers =====
+  function setDetails(html) {
+    document.getElementById('details').innerHTML = html;
+  }
+
+  function levelColor(level) {
+    if (level === 'low') return '#2ecc71';
+    if (level === 'medium') return '#f1c40f';
+    if (level === 'high') return '#e74c3c';
+    return '#6c757d'; // unknown
+  }
+
+  function styleForLevel(level) {
+    const c = levelColor(level);
+    return {
+      radius: 9,
+      color: c,
+      weight: 2,
+      fillColor: c,
+      fillOpacity: 0.85
+    };
+  }
+
+  function rebuildHeatFromKnown() {
+    const pts = [];
+    for (const v of hriById.values()) {
+      pts.push([v.lat, v.lon, v.hri]); // intensity = hri
+    }
+    heatLayer.setLatLngs(pts);
+  }
+
+  function setHeatEnabled(on) {
+    heatEnabled = on;
+    document.getElementById('btnToggleHeat').textContent = `Heatmap: ${heatEnabled ? 'увімк.' : 'вимк.'}`;
+    if (heatEnabled) {
+      if (!map.hasLayer(heatLayer)) heatLayer.addTo(map);
+    } else {
+      if (map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
+    }
+  }
+
+  // ===== Load places from DB by bounds =====
+  async function loadPlaces() {
+    setDetails('<span class="text-muted">Завантажую точки з БД…</span>');
+
+    const b = map.getBounds();
+    const zoom = map.getZoom();
+
+    const url =
+      `/api/places_in_bounds?minLat=${b.getSouth()}&maxLat=${b.getNorth()}&minLon=${b.getWest()}&maxLon=${b.getEast()}&zoom=${zoom}`;
+
+    const r = await fetch(url);
+    const data = await r.json();
+    if (data.error) {
+      setDetails(`<span class="text-danger">${escapeHtml(data.error)}</span>`);
+      return;
+    }
+
+    currentPlaces = data.places || [];
+
+    markersLayer.clearLayers();
+    markerById.clear();
+
+    for (const p of currentPlaces) {
+      const known = hriById.get(p.id);
+      const level = known ? known.level : 'unknown';
+
+      const marker = L.circleMarker([p.lat, p.lon], styleForLevel(level));
+      marker.bindTooltip(`${escapeHtml(p.name)}`, {direction:'top'});
+
+      marker.on('click', () => onPlaceClick(p));
+      marker.addTo(markersLayer);
+      markerById.set(p.id, marker);
+    }
+
+    setDetails(`
+      <div class="text-muted">
+        Завантажено точок: <b>${currentPlaces.length}</b> (zoom: ${zoom}).<br/>
+        Автопідігрів: ${AUTO_WARMUP_ENABLED ? 'увімкнено' : 'вимкнено'} (від zoom ≥ ${AUTO_WARMUP_MIN_ZOOM})
+      </div>
+    `);
+
+    // heatmap тільки з відомих HRI
+    rebuildHeatFromKnown();
+
+    // ===== ВАРІАНТ A: авто-підігрів після завантаження =====
+    const now = Date.now();
+    if (AUTO_WARMUP_ENABLED &&
+        zoom >= AUTO_WARMUP_MIN_ZOOM &&
+        (now - lastAutoWarmAt) > AUTO_WARMUP_COOLDOWN_MS) {
+      lastAutoWarmAt = now;
+      await heatBooster(AUTO_WARMUP_N, { silent: true });
+    }
+  }
+
+  // ===== Compute HRI for place =====
+  async function onPlaceClick(place) {
+    setDetails(`<span class="text-muted">Розрахунок HRI для <b>${escapeHtml(place.name)}</b>…</span>`);
+
+    const rr = await fetch(`/api/hri_at?lat=${place.lat}&lon=${place.lon}`);
+    const d = await rr.json();
+    if (d.error) {
+      setDetails(`<span class="text-danger">${escapeHtml(d.error)}</span>`);
+      return;
+    }
+
+    const level = d.level || 'unknown';
+    const marker = markerById.get(place.id);
+    if (marker) marker.setStyle(styleForLevel(level));
+
+    hriById.set(place.id, { hri: d.hri, level, lat: place.lat, lon: place.lon });
+    rebuildHeatFromKnown();
+
+    setDetails(`
+      <div><b>${escapeHtml(place.name)}</b> <span class="badge badge-soft ms-1">нас. ${escapeHtml(place.population || 0)}</span></div>
+      <div class="mt-1">HRI: <b>${escapeHtml(d.hri)}</b> (${escapeHtml(level)})
+        ${d.cached ? '<span class="badge bg-secondary ms-1">cache</span>' : ''}
+      </div>
+      <hr class="my-2"/>
+      <div>Темп.: ${escapeHtml(d.avg_temp)} °C</div>
+      <div>Сонце: ${escapeHtml(d.solar)} W/m²</div>
+      <div>Вологість: ${escapeHtml(d.humidity)} %</div>
+      <hr class="my-2"/>
+      <div><b>Вплив:</b> ${escapeHtml(d.impact)}</div>
+      <div class="mt-1"><b>Рекомендації:</b> ${escapeHtml(d.recommendations)}</div>
+      <div class="mt-1"><b>Ризики:</b> ${escapeHtml(d.diseases)}</div>
+    `);
+  }
+
+  // ===== Click anywhere: compute HRI at coords =====
+  map.on('click', async (e) => {
+    const lat = e.latlng.lat;
+    const lon = e.latlng.lng;
+
+    if (clickMarker) map.removeLayer(clickMarker);
+    clickMarker = L.circleMarker([lat, lon], {
+      radius: 8, color: '#0d6efd', weight: 2, fillColor: '#0d6efd', fillOpacity: 0.35
+    }).addTo(map);
+
+    setDetails(`<span class="text-muted">Розрахунок для координат ${lat.toFixed(4)}, ${lon.toFixed(4)}…</span>`);
+
+    const r = await fetch(`/api/hri_at?lat=${lat}&lon=${lon}`);
+    const d = await r.json();
+    if (d.error) {
+      setDetails(`<span class="text-danger">${escapeHtml(d.error)}</span>`);
+      return;
+    }
+
+    setDetails(`
+      <div><b>Точка на карті</b></div>
+      <div class="text-muted">${lat.toFixed(4)}, ${lon.toFixed(4)}</div>
+      <div class="mt-1">HRI: <b>${escapeHtml(d.hri)}</b> (${escapeHtml(d.level)})
+        ${d.cached ? '<span class="badge bg-secondary ms-1">cache</span>' : ''}
+      </div>
+      <hr class="my-2"/>
+      <div>Темп.: ${escapeHtml(d.avg_temp)} °C</div>
+      <div>Сонце: ${escapeHtml(d.solar)} W/m²</div>
+      <div>Вологість: ${escapeHtml(d.humidity)} %</div>
+      <hr class="my-2"/>
+      <div><b>Вплив:</b> ${escapeHtml(d.impact)}</div>
+      <div class="mt-1"><b>Рекомендації:</b> ${escapeHtml(d.recommendations)}</div>
+      <div class="mt-1"><b>Ризики:</b> ${escapeHtml(d.diseases)}</div>
+    `);
+  });
+
+  // ===== Heat booster =====
+  async function heatBooster(n = 60, opts = { silent: false }) {
+    if (isWarming) return;
+    isWarming = true;
+
+    try {
+      const toCalc = [];
+      for (const p of currentPlaces) {
+        if (toCalc.length >= n) break;
+        if (!hriById.has(p.id)) toCalc.push(p);
+      }
+
+      if (toCalc.length === 0) {
+        if (!opts.silent) setDetails('<span class="text-muted">У цій області вже достатньо пораховано.</span>');
+        return;
+      }
+
+      if (!opts.silent) {
+        setDetails(`<span class="text-muted">Підігріваю heatmap… (${toCalc.length} точок)</span>`);
+      }
+
+      const CONC = 6;
+      let idx = 0;
+
+      async function worker() {
+        while (idx < toCalc.length) {
+          const p = toCalc[idx++];
+          try {
+            const rr = await fetch(`/api/hri_at?lat=${p.lat}&lon=${p.lon}`);
+            const d = await rr.json();
+            if (!d.error) {
+              hriById.set(p.id, { hri: d.hri, level: d.level, lat: p.lat, lon: p.lon });
+              const marker = markerById.get(p.id);
+              if (marker) marker.setStyle(styleForLevel(d.level));
+            }
+          } catch (_) {}
+        }
+      }
+
+      const workers = [];
+      for (let i = 0; i < CONC; i++) workers.push(worker());
+      await Promise.all(workers);
+
+      rebuildHeatFromKnown();
+      if (!opts.silent) {
+        setDetails(`<span class="text-muted">Готово. Додано HRI для ~${toCalc.length} точок у цій області.</span>`);
+      }
+    } finally {
+      isWarming = false;
+    }
+  }
+
+  // ===== Buttons + auto reload on move =====
+  document.getElementById('btnReload').addEventListener('click', loadPlaces);
+
+  document.getElementById('btnToggleHeat').addEventListener('click', () => {
+    setHeatEnabled(!heatEnabled);
+  });
+
+  document.getElementById('btnWarm').addEventListener('click', () => {
+    heatBooster(AUTO_WARMUP_N, { silent: false });
+  });
+
+  let loadTimer = null;
+  function scheduleLoad() {
+    if (loadTimer) clearTimeout(loadTimer);
+    loadTimer = setTimeout(loadPlaces, 250);
+  }
+  map.on('moveend', scheduleLoad);
+
+  // init
+  setHeatEnabled(true);
+  loadPlaces();
+</script>
+</body>
+</html>

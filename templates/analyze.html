@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Аналіз</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fas fa-heartbeat me-2"></i>Climate Health</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Інформація</a></li>
+                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="/analyze">Аналіз</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/map">Карта</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="text-center mb-4"><i class="fas fa-cloud-sun"></i> Аналіз впливу клімату</h1>
+        
+        <form id="analyzeForm" class="card p-4 shadow">
+            <div class="mb-3">
+                <label>Критерії:</label><br>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="criteria" value="temp" id="temp" checked>
+                    <label class="form-check-label" for="temp">Температура</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="criteria" value="solar" id="solar" checked>
+                    <label class="form-check-label" for="solar">Сонячна радіація</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="criteria" value="humidity" id="humidity" checked>
+                    <label class="form-check-label" for="humidity">Вологість</label>
+                </div>
+            </div>
+            <div class="alert alert-secondary py-2">
+                <small><i class="fas fa-info-circle me-1"></i>Якщо зняти всі галочки — система автоматично врахує всі критерії, щоб уникнути розрахунку на «нейтральних» значеннях.</small>
+            </div>
+            <div class="mb-3">
+                <label>Режим аналізу:</label><br>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="mode" value="db" id="mode_db" checked>
+                    <label class="form-check-label" for="mode_db">З бази даних</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="mode" value="manual" id="mode_manual">
+                    <label class="form-check-label" for="mode_manual">Ручний ввід</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="mode" value="api" id="mode_api">
+                    <label class="form-check-label" for="mode_api">Поточні дані з API</label>
+                </div>
+            </div>
+            <!-- Поля для БД -->
+            <div id="db_fields" class="mb-3">
+                <label for="year">Рік:</label>
+                <select class="form-select" name="year" id="year">
+                    {% for y in years %}<option value="{{y}}">{{y}}</option>{% endfor %}
+                </select>
+                <label for="month">Місяць (опціонально):</label>
+                <input class="form-control" type="number" name="month" id="month" min="1" max="12">
+            </div>
+            <!-- Поля для ручного вводу -->
+            <div id="manual_fields" class="mb-3 d-none">
+                <label for="manual_temp">Температура (°C):</label>
+                <input class="form-control" type="number" name="manual_temp" id="manual_temp" step="0.1">
+                <label for="manual_solar">Сонячна радіація (W/m²):</label>
+                <input class="form-control" type="number" name="manual_solar" id="manual_solar" step="1">
+                <label for="manual_humidity">Вологість (%):</label>
+                <input class="form-control" type="number" name="manual_humidity" id="manual_humidity" min="0" max="100" step="1">
+            </div>
+            <!-- Поля для API -->
+            <div id="api_fields" class="mb-3 d-none">
+                <label for="api_city">Місто (наприклад, Kyiv):</label>
+                <input class="form-control" type="text" name="api_city" id="api_city">
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-chart-line"></i> Аналізувати</button>
+        </form>
+        
+        <div id="results" class="mt-5 d-none">
+            <h2 class="text-center">Результати</h2>
+            <table class="table table-striped table-hover">
+                <thead class="table-dark"><tr id="tableHeader"></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+            <div class="row">
+                <div class="col-md-6"><img id="plotHri" class="img-fluid" alt="Графік HRI"></div>
+                <div class="col-md-6"><img id="plotCriteria" class="img-fluid" alt="Графік критеріїв"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/safe-html.js') }}"></script>
+    <script>
+        // Показувати поля залежно від режиму
+        $('input[name="mode"]').change(function() {
+            var mode = $(this).val();
+            $('#db_fields').toggleClass('d-none', mode !== 'db');
+            $('#manual_fields').toggleClass('d-none', mode !== 'manual');
+            $('#api_fields').toggleClass('d-none', mode !== 'api');
+        });
+
+        $('#analyzeForm').submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: '/api/analyze',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function(data) {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    $('#results').removeClass('d-none');
+                    
+                    // Таблиця з новими колонками (impact, recommendations, diseases)
+                    if (!Array.isArray(data.results) || data.results.length === 0) {
+                        alert('Дані відсутні');
+                        return;
+                    }
+                    var headers = Object.keys(data.results[0]);
+                    var headerHtml = headers.map(h => `<th>${escapeHtml(h === 'month' ? 'Місяць' : h === 'hri' ? 'HRI' : h === 'impact' ? 'Вплив' : h === 'recommendations' ? 'Рекомендації' : h === 'diseases' ? 'Хвороби' : h)}</th>`).join('');
+                    $('#tableHeader').html(headerHtml);
+                    
+                    var bodyHtml = data.results.map(row => {
+                        return '<tr>' + headers.map(key => `<td>${escapeHtml(row[key])}</td>`).join('') + '</tr>';
+                    }).join('');
+                    $('#tableBody').html(bodyHtml);
+                    
+                    // Графіки
+                    $('#plotHri').attr('src', 'data:image/png;base64,' + data.plot_hri);
+                    $('#plotCriteria').attr('src', 'data:image/png;base64,' + data.plot_criteria);
+                },
+                error: function(xhr) {
+                    alert(xhr.responseJSON?.error || 'Не вдалося виконати запит');
+                }
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
