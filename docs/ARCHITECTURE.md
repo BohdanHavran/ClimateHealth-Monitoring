@@ -1,5 +1,27 @@
 # Архітектура системи
 
+## Поточний контур фази 3
+
+```mermaid
+flowchart LR
+  Dashboard[React Dashboard / History] --> API[Flask /api/v1]
+  HRI[React HRI] --> API
+  Map[React Leaflet map] --> API
+  Map --> Tiles[OpenStreetMap tiles]
+  API -->|SELECT READ ONLY| DB[(MySQL)]
+  API --> Weather[Open-Meteo current model data]
+  API --> Rules[Unchanged 27 fuzzy rules]
+  API --> ML[Existing FastAPI: model_unavailable]
+  CDC[CDC metadata / aggregates] --> Offline[Weekly feature prototype]
+  Offline --> Gate[Unapproved experiment gate]
+```
+
+Реалізовані Dashboard, History, HRI та Map з hash navigation. `HistoryPanel` повторно використовує reader API. `WeatherPanel` приймає MySQL place selection або явні координати, не приєднуючи до місця історію без географії. Карта завантажує до 200 місць за явним оновленням області; погода/HRI тільки для вибраного місця, не пакетно для всіх маркерів. Jinja/Leaflet збережено.
+
+`open_meteo.py` — координатний адаптер без ключа, units/finite/time checks, TTL 300 с/256 keys, process-local 30/min і 9000/day. Restart і workers множать бюджет; це не production global quota. Новий шлях повертає модельну shortwave_radiation, legacy city OpenWeather зберігає попередню апроксимацію. HRI engine/правила не змінено. API `received_at` не підміняє provider `data_time`/`fetched_at` або час первинного історичного спостереження. `/places/search` — bounded parameterized escaped LIKE без записів/DDL.
+
+JS client перевіряє форму відповіді, React екранує імена текстом. Leaflet/ECharts винесено в окремі chunks. `ml_pipeline/weekly.py` та experiment config — offline preparation, не predictor; missing values лишаються null, availability перевіряється до issue time, training_approved=false. Докладно: `ML_DATA_PROTOCOL.md`. Схеми нижче зберігають історичне та довгострокове обґрунтування; поточний стан визначає цей блок.
+
 ## Реалізовані уточнення фази 2
 
 ```mermaid

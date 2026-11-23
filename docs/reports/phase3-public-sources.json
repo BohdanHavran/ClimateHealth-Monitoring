@@ -1,0 +1,145 @@
+{
+  "checked_at": "2026-11-23T14:18:37.241804+00:00",
+  "cdc": {
+    "dataset_id": "ua7e-t2fy",
+    "name": "Weekly Hospital Respiratory Data (HRD) Metrics by Jurisdiction, National Healthcare Safety Network (NHSN)",
+    "license_id": "USGOV_WORKS",
+    "license": {
+      "name": "Public Domain U.S. Government",
+      "termsLink": "https://www.usa.gov/government-works"
+    },
+    "coverage": [
+      {
+        "first_week": "2020-08-08T00:00:00.000",
+        "last_week": "2026-11-14T00:00:00.000",
+        "rows": "21976",
+        "jurisdictions": "67"
+      }
+    ],
+    "jurisdictions": [
+      "Region 7",
+      "ND",
+      "NV",
+      "Region 8",
+      "OH",
+      "USA",
+      "Region 1",
+      "GU",
+      "NY",
+      "HI",
+      "IN",
+      "NE",
+      "WV",
+      "FL",
+      "ME",
+      "AR",
+      "Region 3",
+      "CT",
+      "SD",
+      "LA",
+      "WY",
+      "MT",
+      "NJ",
+      "MI",
+      "Region 10",
+      "MP",
+      "Region 5",
+      "UT",
+      "SC",
+      "VI",
+      "DE",
+      "CA",
+      "NH",
+      "OR",
+      "TX",
+      "PR",
+      "KY",
+      "Region 6",
+      "Region 2",
+      "NM",
+      "MS",
+      "DC",
+      "MO",
+      "WI",
+      "NC",
+      "OK",
+      "RI",
+      "GA",
+      "ID",
+      "MN",
+      "Region 4",
+      "PA",
+      "AK",
+      "MD",
+      "IL",
+      "TN",
+      "Region 9",
+      "WA",
+      "MA",
+      "AL",
+      "IA",
+      "VT",
+      "CO",
+      "AS",
+      "VA",
+      "AZ",
+      "KS"
+    ],
+    "target_candidate": "totalconfflunewadm",
+    "candidate_jurisdiction": "FL",
+    "target_nonnull_coverage": [
+      {
+        "first_week": "2020-10-17T00:00:00.000",
+        "last_week": "2026-11-14T00:00:00.000",
+        "rows": "318"
+      }
+    ],
+    "fields": [
+      {
+        "fieldName": "weekendingdate",
+        "dataTypeName": "calendar_date",
+        "description": "MMWR week end date"
+      },
+      {
+        "fieldName": "jurisdiction",
+        "dataTypeName": "text",
+        "description": "Name of country, region, or state"
+      },
+      {
+        "fieldName": "totalconfflunewadm",
+        "dataTypeName": "number",
+        "description": "Total number of new hospital admissions of patients with confirmed influenza captured during the reporting week (Sunday - Saturday)"
+      },
+      {
+        "fieldName": "totalconfflunewadmhosprep",
+        "dataTypeName": "number",
+        "description": "Total number of hospitals reporting new admissions of patients with confirmed influenza for Sunday through Saturday of the reporting week"
+      },
+      {
+        "fieldName": "totalconfflunewadmperchosprep",
+        "dataTypeName": "number",
+        "description": "Percent of total hospitals reporting new admissions of patients with confirmed influenza for Sunday through Saturday of the reporting week"
+      }
+    ],
+    "record_level_available_at_verified": false
+  },
+  "open_meteo": {
+    "current_units": {
+      "time": "iso8601",
+      "interval": "seconds",
+      "temperature_2m": "°C",
+      "relative_humidity_2m": "%",
+      "shortwave_radiation": "W/m²"
+    },
+    "current_fields": [
+      "time",
+      "interval",
+      "temperature_2m",
+      "relative_humidity_2m",
+      "shortwave_radiation"
+    ],
+    "licence_url": "https://open-meteo.com/en/licence"
+  },
+  "training_performed": false,
+  "medical_rows_downloaded": false
+}

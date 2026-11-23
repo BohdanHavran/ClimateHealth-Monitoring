@@ -1,0 +1,72 @@
+[
+  {
+    "command": [
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-v"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "D:\\����������� ����\\����������� 5 ����\\������\\������ 2.0\\.venv\\Lib\\site-packages\\fastapi\\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n  from starlette.testclient import TestClient as TestClient  # noqa\ntest_api_rate_limit_returns_retry_header (test_api_v1.APITests.test_api_rate_limit_returns_retry_header) ... ok\ntest_empty_and_dependency_error (test_api_v1.APITests.test_empty_and_dependency_error) ... [2026-11-23 16:36:35,182] WARNING in api: Versioned API dependency unavailable\nok\ntest_hri_pure_no_db_and_not_medical (test_api_v1.APITests.test_hri_pure_no_db_and_not_medical) ... ok\ntest_invalid_pagination_bounds_and_json (test_api_v1.APITests.test_invalid_pagination_bounds_and_json) ... ok\ntest_legacy_expensive_request_limit_covers_manual_analysis (test_api_v1.APITests.test_legacy_expensive_request_limit_covers_manual_analysis) ... ok\ntest_legacy_reads_have_no_ddl_or_commit (test_api_v1.APITests.test_legacy_reads_have_no_ddl_or_commit) ... ok\ntest_observations_cursor_and_quality_no_imputation (test_api_v1.APITests.test_observations_cursor_and_quality_no_imputation) ... ok\ntest_rate_limits_have_bounded_memory_and_reset (test_api_v1.APITests.test_rate_limits_have_bounded_memory_and_reset) ... ok\ntest_schema_missing_and_compatible (test_api_v1.APITests.test_schema_missing_and_compatible) ... ok\ntest_status_without_database (test_api_v1.APITests.test_status_without_database) ... ok\ntest_unknown_versioned_route_has_json_error (test_api_v1.APITests.test_unknown_versioned_route_has_json_error) ... ok\ntest_weather_cache_and_global_quota (test_api_v1.APITests.test_weather_cache_and_global_quota) ... ok\ntest_writes_disabled_and_connections_read_only (test_api_v1.APITests.test_writes_disabled_and_connections_read_only) ... ok\ntest_empty_and_nonfinite_values_are_rejected (test_data_quality.DataQualityTests.test_empty_and_nonfinite_values_are_rejected) ... ok\ntest_missing_invalid_and_nonfinite (test_data_quality.DataQualityTests.test_missing_invalid_and_nonfinite) ... ok\ntest_profile_checks_pairs_with_missing_values_and_preserves_source (test_data_quality.DataQualityTests.test_profile_checks_pairs_with_missing_values_and_preserves_source) ... ok\ntest_reject_unavailable_or_ambiguous_time (test_data_quality.DataQualityTests.test_reject_unavailable_or_ambiguous_time) ... ok\ntest_valid_timestamp_and_finite_observation (test_data_quality.DataQualityTests.test_valid_timestamp_and_finite_observation) ... ok\ntest_value_is_not_clipped_or_silently_changed (test_data_quality.DataQualityTests.test_value_is_not_clipped_or_silently_changed) ... ok\ntest_ambiguous_time_and_duplicate_days_rejected (test_datasets.DatasetTests.test_ambiguous_time_and_duplicate_days_rejected) ... ok\ntest_lags_exclude_unpublished_values_and_preserve_missing (test_datasets.DatasetTests.test_lags_exclude_unpublished_values_and_preserve_missing) ... ok\ntest_manifest_tracks_bytes_without_claiming_training_readiness (test_datasets.DatasetTests.test_manifest_tracks_bytes_without_claiming_training_readiness) ... ok\ntest_iso_timestamp_requires_event_timezone (test_ml_contract.ContractTests.test_iso_timestamp_requires_event_timezone) ... ok\ntest_no_model_never_returns_zero_or_prediction (test_ml_contract.ContractTests.test_no_model_never_returns_zero_or_prediction) ... ok\ntest_nonfinite_invalid_feature_and_duplicate_rejected (test_ml_contract.ContractTests.test_nonfinite_invalid_feature_and_duplicate_rejected) ... ok\ntest_time_leak_and_ambiguous_dates_rejected (test_ml_contract.ContractTests.test_time_leak_and_ambiguous_dates_rejected) ... ok\ntest_unknown_fields_and_missing_features_rejected (test_ml_contract.ContractTests.test_unknown_fields_and_missing_features_rejected) ... ok\ntest_client_contract_and_local_transport_headers (test_ml_http.MLHTTPTests.test_client_contract_and_local_transport_headers) ... ok\ntest_client_failures_are_unavailable_not_zero (test_ml_http.MLHTTPTests.test_client_failures_are_unavailable_not_zero) ... ok\ntest_client_refuses_available_model_and_malformed_response (test_ml_http.MLHTTPTests.test_client_refuses_available_model_and_malformed_response) ... ok\ntest_service_authentication_and_health (test_ml_http.MLHTTPTests.test_service_authentication_and_health) ... ok\ntest_service_honest_unavailable (test_ml_http.MLHTTPTests.test_service_honest_unavailable) ... ok\ntest_service_schema_feature_and_body_limits (test_ml_http.MLHTTPTests.test_service_schema_feature_and_body_limits) ... ok\ntest_daily_quota_applies_before_network (test_monitoring.MonitoringTests.test_daily_quota_applies_before_network) ... ok\ntest_invalid_search_and_coordinates_never_call_db (test_monitoring.MonitoringTests.test_invalid_search_and_coordinates_never_call_db) ... ok\ntest_invalid_source_and_timeout_are_503_not_bad_user_input (test_monitoring.MonitoringTests.test_invalid_source_and_timeout_are_503_not_bad_user_input) ... [2026-11-23 16:36:35,360] WARNING in api: Versioned API dependency unavailable\n[2026-11-23 16:36:35,360] WARNING in api: Versioned API dependency unavailable\nok\ntest_missing_invalid_and_unexpected_units_never_cached (test_monitoring.MonitoringTests.test_missing_invalid_and_unexpected_units_never_cached) ... ok\ntest_provider_units_timestamps_cache_and_no_imputation (test_monitoring.MonitoringTests.test_provider_units_timestamps_cache_and_no_imputation) ... ok\ntest_search_is_bounded_and_parameterized (test_monitoring.MonitoringTests.test_search_is_bounded_and_parameterized) ... ok\ntest_weather_api_real_contract_without_database (test_monitoring.MonitoringTests.test_weather_api_real_contract_without_database) ... ok\ntest_invalid_month_is_rejected (test_mysql_integration.MySQLIntegration.test_invalid_month_is_rejected) ... skipped 'isolated CI MySQL not enabled'\ntest_parameterized_climate_insert_and_read (test_mysql_integration.MySQLIntegration.test_parameterized_climate_insert_and_read) ... skipped 'isolated CI MySQL not enabled'\ntest_required_tables_exist (test_mysql_integration.MySQLIntegration.test_required_tables_exist) ... skipped 'isolated CI MySQL not enabled'\ntest_analysis_database_error_is_redacted_and_not_masked_by_rollback (test_routes.RoutesTest.test_analysis_database_error_is_redacted_and_not_masked_by_rollback) ... [2026-11-23 16:36:35,383] ERROR in climat: Analysis failed due to unavailable dependency or invalid source data\nok\ntest_invalid_analysis_inputs_rejected_before_database (test_routes.RoutesTest.test_invalid_analysis_inputs_rejected_before_database) ... ok\ntest_invalid_coordinates_and_limits_are_rejected_before_database (test_routes.RoutesTest.test_invalid_coordinates_and_limits_are_rejected_before_database) ... ok\ntest_liveness_does_not_touch_database (test_routes.RoutesTest.test_liveness_does_not_touch_database) ... ok\ntest_missing_secret_file_fails_closed_without_leaking_path (test_routes.RoutesTest.test_missing_secret_file_fails_closed_without_leaking_path) ... ok\ntest_missing_secret_is_rejected_without_fallback (test_routes.RoutesTest.test_missing_secret_is_rejected_without_fallback) ... ok\ntest_mysql_connection_uses_bounded_timeouts_and_selected_port (test_routes.RoutesTest.test_mysql_connection_uses_bounded_timeouts_and_selected_port) ... ok\ntest_nonfinite_cached_data_is_unavailable (test_routes.RoutesTest.test_nonfinite_cached_data_is_unavailable) ... [2026-11-23 16:36:35,390] ERROR in climat: HRI lookup failed due to unavailable dependency or invalid source data\n[2026-11-23 16:36:35,390] ERROR in climat: HRI lookup failed due to unavailable dependency or invalid source data\n[2026-11-23 16:36:35,390] ERROR in climat: HRI lookup failed due to unavailable dependency or invalid source data\n[2026-11-23 16:36:35,390] ERROR in climat: HRI lookup failed due to unavailable dependency or invalid source data\nok\ntest_password_file_takes_precedence_and_has_a_size_limit (test_routes.RoutesTest.test_password_file_takes_precedence_and_has_a_size_limit) ... ok\ntest_readiness_probes_database (test_routes.RoutesTest.test_readiness_probes_database) ... ok\ntest_readiness_reports_database_failure_without_details (test_routes.RoutesTest.test_readiness_reports_database_failure_without_details) ... [2026-11-23 16:36:35,395] WARNING in climat: Readiness check failed: database unavailable\nok\ntest_valid_cached_result_remains_compatible (test_routes.RoutesTest.test_valid_cached_result_remains_compatible) ... ok\ntest_valid_manual_analysis_contract (test_routes.RoutesTest.test_valid_manual_analysis_contract) ... ok\ntest_history_detects_generated_test_credential_without_exposing_value (test_secret_scan.HistoryScanTests.test_history_detects_generated_test_credential_without_exposing_value) ... ok\ntest_root_commit_patch_without_secret (test_secret_scan.HistoryScanTests.test_root_commit_patch_without_secret) ... ok\ntest_missing_availability_and_duplicate_dates_rejected (test_weekly_pipeline.WeeklyPipelineTests.test_missing_availability_and_duplicate_dates_rejected) ... ok\ntest_other_regions_and_missing_values_never_become_zero (test_weekly_pipeline.WeeklyPipelineTests.test_other_regions_and_missing_values_never_become_zero) ... ok\ntest_unpublished_health_is_not_a_feature_or_baseline (test_weekly_pipeline.WeeklyPipelineTests.test_unpublished_health_is_not_a_feature_or_baseline) ... ok\n\n----------------------------------------------------------------------\nRan 61 tests in 0.362s\n\nOK (skipped=3)\n"
+  },
+  {
+    "command": [
+      "-m",
+      "pip",
+      "check"
+    ],
+    "returncode": 0,
+    "stdout": "No broken requirements found.\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "-m",
+      "ruff",
+      "check",
+      "."
+    ],
+    "returncode": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "climate_health",
+      "ml_service",
+      "ml_pipeline",
+      "climate_data_quality.py",
+      "ml_contract.py"
+    ],
+    "returncode": 0,
+    "stdout": "18 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "-m",
+      "openapi_spec_validator",
+      "docs/api/backend.openapi.yaml"
+    ],
+    "returncode": 0,
+    "stdout": "docs/api/backend.openapi.yaml: OK\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "-m",
+      "openapi_spec_validator",
+      "docs/api/ml.openapi.yaml"
+    ],
+    "returncode": 0,
+    "stdout": "docs/api/ml.openapi.yaml: OK\n",
+    "stderr": ""
+  }
+]

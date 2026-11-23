@@ -1,58 +1,65 @@
-# Система моніторингу кліматичних умов
+# ClimateHealth Monitoring
 
-Основна програмна база — ця директорія (`Диплом 2.0`). Початкову стабілізацію виконано 23.11.2026. Поточний вебзастосунок: Flask/Jinja/Leaflet, MySQL, scikit-fuzzy, Matplotlib, OpenWeather та GeoNames. HRI є правиловим індексом, не навченою моделлю захворюваності. `app.py` — окремий Streamlit-прототип; до Flask image не входить.
+Дослідницька система моніторингу кліматичних умов: Flask + MySQL, React/TypeScript/Vite, ECharts і React-Leaflet. HRI — наявні 27 нечітких правил, **не медично підтверджена ймовірність захворювання**. Прогнозна нейромережа ще не навчена; ML HTTP-сервіс чесно повертає `model_unavailable`.
 
-## Поточний стан
+Основна програмна база — цей каталог (`Диплом 2.0`). [Репозиторій](https://github.com/BohdanHavran/ClimateHealth-Monitoring), гілка `main`. Application checks і Secret check успішні для базового `312c470`; результати поточного етапу наведено у звіті фази 3. Статус кожного наступного коміту перевіряти в Actions. Кожен push потребує окремого дозволу. Історичні звіти описують стан відповідної фази, не поточний Git status.
 
-**Фаза 2:** додано `climate_health/`, `/api/v1/`, React/TypeScript/Vite/ECharts та локальний FastAPI без моделі. DDL із HTTP прибрано. Усі runtime MySQL-з’єднання за замовчуванням `READ ONLY`, cache writes/seed/import вимкнено. Git ініціалізовано на `main`, origin — `git@github.com:BohdanHavran/ClimateHealth-Monitoring.git`; SSH підтвердив `BohdanHavran`, remote порожній. Push не виконано. Поточний звіт: [PHASE2_REPORT.md](docs/PHASE2_REPORT.md).
+## Реалізований інтерфейс
 
-React: у `frontend/` виконати `npm ci`, `npm run dev`; Node 24 рекомендовано. Vite `127.0.0.1:5173` проксіює `/api` на Flask `127.0.0.1:8000`. Реалізовано історичні спостереження: фільтр року, keyset-пагінація, таблиця, ECharts і loading/error/empty. Походження та географію даних не підтверджено, UI це показує. React-карта поки не реалізована, старий Leaflet/Jinja збережено.
+- `/#dashboard` — поточна погода вибраного місця, джерело/час/якість, історичні графіки й таблиця, фільтр року та keyset-пагінація.
+- `/#hri` — валідовані ручні входи або реальні погодні параметри, числовий HRI, шкала 0–1, effective inputs і повідомлення про clipping.
+- `/#map` — MySQL-населені пункти, bounded markers, пошук/вибір міста, погода та HRI для вибраних координат. Оновлення області — явна дія користувача, не масове погодне завантаження.
+- `/#history` — окремий перегляд історичних записів. Їхню географію та первинне джерело не підтверджено; до карти вони не приєднуються.
 
-Локальний ML: `.venv/Scripts/python.exe -m uvicorn ml_service.app:app --host 127.0.0.1 --port 8001`. Обом процесам передати один випадковий `ML_SERVICE_TOKEN` через захищене оточення, Flask також `ML_SERVICE_URL=http://127.0.0.1:8001`. Uvicorn сам `.env` не завантажує. Токен не належить до Vite env. Без token — 401; валідний запит — 503 `model_unavailable`, без прогнозу. Автономна перевірка: `.venv/Scripts/python.exe scripts/smoke_ml_http.py` — лише синтетична технічна фікстура.
+Jinja/Leaflet інтерфейс збережено на Flask `/`, `/map`, `/analyze`. `app.py` — окремий Streamlit-прототип, не частина нового React UI; CSV невідомого походження не публікується.
 
-Локальне `.venv` створено, Python-залежності встановлено тільки в ньому. Наявний MySQL 8.0.40 доступний; читальні API перевірено без змін таблиць/даних. Постійний reader account ще не створено. Docker/Terraform/cloud у фазі 2 не запускати; Word/PDF не змінювалися.
+## Локальний запуск
 
-## Локальний запуск після налаштування облікового запису
+Python 3.12; залежності лише в локальному `.venv`:
 
 ```powershell
+python -m venv .venv
 .venv/Scripts/python.exe -m pip install -r requirements-dev.txt
 Copy-Item .env.example .env
 .venv/Scripts/python.exe scripts/run_local.py
 ```
 
-При відсутньому `.venv` створити його наявним Python 3.12: `python -m venv .venv`. Перед запуском заповнити локальну `.env`: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS_FILE`; фактичний пароль зберігати в локальному файлі `.secrets/db_password` із обмеженим доступом або передати `DB_PASS` через оточення. `.env` та `.secrets/` ігноруються Git. Не записувати пароль у команди, документацію чи образ. `.env.example` не містить робочих облікових даних; `climate_app` поки є запропонованим ім’ям, не створеним користувачем. `OPENWEATHER_API_KEY` потрібен для реальної погоди, ключ у коді відсутній. `run_local.py` завантажує лише дозволені поля `.env`, слухає `127.0.0.1:8000`, debug/reloader вимкнено. Це сервер розробки; Linux image використовує Gunicorn.
+Не перезаписувати наявні `.venv` або `.env`; перші кроки потрібні тільки за їх відсутності. Налаштувати DB_HOST/PORT/NAME/USER і password file у захищеній локальній конфігурації. `.env.example` не містить credentials, запропонований `climate_app` ще не створено. Привілейовані credentials допустимі лише для погодженої тимчасової read-only діагностики. Runtime відкриває `START TRANSACTION READ ONLY`, `DATABASE_WRITES_ENABLED=False`; DDL, seed/import і DB cache writes не виконуються. Наявну `climate_db` не ініціалізувати baseline SQL. Reader account і backup/restore потребують окремого погодження: [керівництво](docs/MYSQL_SCHEMA_GUIDE.md).
 
-Для тимчасової дозволеної діагностики є `scripts/inspect_mysql.py` і `scripts/smoke_read_only.py`. Вони читають пароль у пам’ять з окремого локального `.env` через `--secret-source`, не друкують його, не запускають bootstrap і не пишуть у БД. Inspection зберігає лише метадані `climate_db`; його локальний JSON ігнорується Git. Smoke запускає й завершує тимчасовий сервер самостійно. Звичайні функціональні маршрути ще можуть виконувати DDL/оновлювати кеш; вони не входять до read-only smoke.
+Frontend, другий термінал (Node 24 рекомендовано):
 
-## Docker Compose — відкладено
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
 
-У фазі 2 Docker і Terraform не запускаються локально або активними CI jobs. Конфігурації збережено для наступної фази; команди зі старих інфраструктурних документів зараз не виконувати.
+React: `http://127.0.0.1:5173`; Vite proxy `/api` → loopback Flask `:8000`. CORS `*` не використовується. npm/Node встановлюються й обираються користувачем, глобальна конфігурація цим проєктом не змінюється.
 
-Типовий Compose підключається до **наявного зовнішнього MySQL**, не запускає нову БД. `.env` і `.secrets/db_password` потрібно налаштувати локально; Docker secrets монтує пароль у `/run/secrets/db_password`. Порт вебзастосунку відкритий лише на loopback 8000, процес не root, filesystem read-only з `/tmp`, capabilities видалено. Контекст image — allowlist вихідних файлів; архіви, CSV і секрети не копіюються. Працездатність image/Compose ще не підтверджена локальним Docker.
+Погода за координатами — Open-Meteo без ключа, з перевіреними одиницями, timestamps та model-data attribution. Довідник MySQL і явно введені координати — окремі сценарії. [CC BY 4.0 data licence](https://open-meteo.com/en/licence), [free API тільки для non-commercial use та в межах квот](https://open-meteo.com/en/terms). Радіація — модельна shortwave_radiation, не станційне вимірювання. Legacy city OpenWeather API потребує локального OPENWEATHER_API_KEY і зберігає попередню апроксимацію за хмарністю. Секрети ніколи не належать до Vite env або bundle.
 
-`compose.mysql.yaml` — **лише опціональний ізольований стенд**, не потрібний для вашого сервера. Bootstrap `infrastructure/docker/mysql-init/001_schema.sql` призначений винятково для нової порожньої тестової БД; не виконувати на наявній `climate_db`. Скрипт `scripts/init_local_secrets.py` створює паролі лише для цього опціонального стенду, без перезапису файлів. Його не запускали. Окремий MySQL-користувач, backup/restore і відокремлення DDL описані в `docs/ROADMAP.md`.
+ML за потреби: `.venv/Scripts/python.exe -m uvicorn ml_service.app:app --host 127.0.0.1 --port 8001`; обом процесам передати один локальний випадковий ML_SERVICE_TOKEN, Flask — ML_SERVICE_URL. Uvicorn сам `.env` не завантажує. Сервіс не має моделі й не повертає фіктивний прогноз. Dataset pipeline/протокол — [ML_DATA_PROTOCOL](docs/ML_DATA_PROTOCOL.md).
 
 ## Перевірки
 
 ```powershell
 .venv/Scripts/python.exe -m unittest discover -s tests -v
-.venv/Scripts/python.exe -m pip check
 .venv/Scripts/python.exe -m ruff check .
-.venv/Scripts/python.exe -m ruff format --check climate_data_quality.py ml_contract.py
+.venv/Scripts/python.exe -m ruff format --check climate_health ml_service ml_pipeline climate_data_quality.py ml_contract.py
+.venv/Scripts/python.exe -m pip check
+.venv/Scripts/python.exe -m openapi_spec_validator docs/api/backend.openapi.yaml
 .venv/Scripts/python.exe -m openapi_spec_validator docs/api/ml.openapi.yaml
-node tests/test_frontend.cjs
-.venv/Scripts/python.exe -m pip_audit -r requirements.txt
+.venv/Scripts/python.exe scripts/scan_secrets.py --staged --history
 ```
 
-Поточні результати — `docs/PHASE2_REPORT.md`. У frontend: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`. Тести з `RUN_MYSQL_TESTS=1` призначені лише для одноразового CI runner; не передавати їм реквізити робочої БД. Історичні тести за межами цієї директорії не є поточним набором CI. Browser smoke використовує наявні Playwright/Edge без завантаження браузерів; знімки з БД залишаються у виключеній `.local-verification/`.
+У `frontend`: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`. Прямі npm dependencies та lock закріплені; повного Python transitive hash lock поки немає. Synthetic fixtures використовуються лише в тестах. Три MySQL write tests локально пропускаються й призначені тільки для одноразового GitHub runner, не для домашньої БД.
 
-## Документація
+Browser smoke: `scripts/browser_smoke_phase3.cjs` використовує вже наявні Playwright/Edge, нічого не завантажує; `PLAYWRIGHT_MODULE` може вказати встановлений пакет. Потрібні активні read-only Flask і Vite. Це реальна перевірка без підміни MySQL/погоди. Screenshots залишаються в ігнорованій `.local-verification/`. Для обмеженого середовища мережевий доступ до OSM tiles може потребувати окремого дозволу.
 
-- [Звіт першої фази](docs/PHASE1_REPORT.md)
-- [Технічний аудит](docs/TECHNICAL_AUDIT.md) та [вибір стеку](docs/TECH_STACK_DECISIONS.md)
-- [Архітектура і схеми](docs/ARCHITECTURE.md), [інтерактивний AST-граф](docs/graphify/graph.html)
-- [Стратегія даних](docs/DATA_STRATEGY.md), [ML-план](docs/ML_INTEGRATION_PLAN.md), [OpenAPI](docs/api/ml.openapi.yaml)
-- [Інфраструктура й бюджет](docs/INFRASTRUCTURE.md), [Terraform](docs/TERRAFORM_GUIDE.md), [аналіз старої інфраструктури](docs/LEGACY_INFRASTRUCTURE_REVIEW.md)
-- [CI/CD](docs/CI_CD_PIPELINE.md), [дорожня карта](docs/ROADMAP.md), [ADR](docs/adr)
+## Стан і подальша робота
 
-Модель, решта SPA, production auth/TLS, backup/restore і deployment залишаються наступними етапами. Rate limiting та погодний кеш локальні для процесу, не distributed quotas. Прямі Python-залежності pinned; транзитивного hash lock поки немає. Первинний архів містить старий секрет: не публікувати його; ключ необхідно замінити у провайдера.
+[Звіт фази 3](docs/PHASE3_REPORT.md), [API](docs/api/backend.openapi.yaml), [архітектура](docs/ARCHITECTURE.md), [ML-протокол](docs/ML_DATA_PROTOCOL.md), [CI](docs/CI_CD_PIPELINE.md). Віддалені перевірки запускаються після окремо погодженого push.
+
+Поточні quotas/cache — process-local: рестарт і декілька workers змінюють сумарний бюджет. Public auth/TLS, глобальні квоти, backup/restore та production deploy ще не реалізовані. Docker/Terraform jobs **вимкнені**, конфігурації збережені; локально ці інструменти не запускати. DigitalOcean/Kubernetes не використовуються. Word/PDF не змінюються.
+
+`.env`, `.secrets`, `.venv`, архіви, приватні дані, DB metadata, screenshots і Terraform state/plans виключені з Git. Первинний архів містить старий API-ключ: його не публікувати; ключ у провайдера потрібно відкликати/замінити.

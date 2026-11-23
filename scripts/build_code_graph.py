@@ -12,6 +12,7 @@ OUT = ROOT / "docs/graphify"
 OUT.mkdir(parents=True, exist_ok=True)
 files = sorted(ROOT.glob("*.py")) + sorted((ROOT / "scripts").glob("*.py")) + sorted((ROOT / "tests").glob("*.py"))
 files += sorted((ROOT / "climate_health").glob("*.py")) + sorted((ROOT / "ml_service").glob("*.py"))
+files += sorted((ROOT / 'ml_pipeline').glob('*.py'))
 data = extract(files, cache_root=OUT / ".cache", root=ROOT, parallel=False)
 graph = build_from_json(data, directed=True, root=ROOT)
 communities = cluster(graph)

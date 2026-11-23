@@ -1,0 +1,18 @@
+{
+  "protocol_version": "0.1",
+  "status": "candidate_requires_supervisor_and_data_gate_approval",
+  "training_approved": false,
+  "region": "US-FL",
+  "health_source": "CDC NHSN ua7e-t2fy",
+  "target": "totalconfflunewadm for next complete Sunday-Saturday week",
+  "issue_time": "UTC Sunday 00:00 at start of target week",
+  "health_lags_weeks": [2,3,4,5],
+  "climate_lags_weeks": [1,2,3,4],
+  "geographic_weather_aggregation": "validated population-weighted state grid, not a single city proxy",
+  "as_of_requirement": "feature available_at <= issue_time; vintage and reporting-regime checks mandatory",
+  "baselines": ["last available count", "available seasonal week-52 count", "regularized Poisson regression"],
+  "mlp_candidate": {"hidden_layers": [16,8], "seeds": [11,23,37,51,71], "early_stopping": "validation only", "output": "nonnegative count; loss selected before final test"},
+  "evaluation": {"split": "rolling origin by global week, never random rows", "minimum_train_weeks": 52, "validation_weeks": 13, "test_weeks": 26, "metrics": ["MAE", "RMSE", "Poisson deviance"], "uncertainty": "paired block bootstrap; do not imply causality"},
+  "artifacts_required": ["source manifests and SHA256", "licenses", "geo/time mapping", "data-quality report", "fold definitions", "fitted preprocessing", "config and software versions", "predictions and metrics"],
+  "blocking_questions": ["approval of US data rather than Ukrainian outcomes", "row-level historical availability/vintages", "reporting coverage and regime change around November 2024", "adequate seasons and stable target definition"]
+}

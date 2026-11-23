@@ -49,7 +49,7 @@ jobs:
       - name: Lint
         run: python -m ruff check .
       - name: Format extracted modules
-        run: python -m ruff format --check climate_data_quality.py ml_contract.py climate_health ml_service
+        run: python -m ruff format --check climate_data_quality.py ml_contract.py climate_health ml_service ml_pipeline
       - name: Unit, API and disposable MySQL tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
       - name: Frontend escaping tests

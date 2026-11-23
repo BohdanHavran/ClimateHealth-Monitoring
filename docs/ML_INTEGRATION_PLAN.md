@@ -1,5 +1,11 @@
 # План ML-дослідження та інтеграції
 
+## Поточний етап 3
+
+Перевірено CDC NHSN ua7e-t2fy metadata/license та агреговане охоплення. Weekly influenza admissions у US-FL — конкретний кандидат, який потребує погодження території/задачі й не заміняє українські дані автоматично. Реалізовані offline weekly alignment і last-available baseline prototype; навчання/ваг/метрик немає, historical availability/vintages ще не верифіковані. Training gate закритий. Протокол, джерела й порівняння baseline/MLP — [ML_DATA_PROTOCOL.md](ML_DATA_PROTOCOL.md), конфігурація — `experiments/weekly_flu_v01.json`.
+
+FastAPI з попередньої фази збережено й не повертає фальшивого прогнозу. HRI не є медичною міткою. Нижче залишені попередні обґрунтування; старі твердження про відсутність HTTP замінені фактичним поточним станом.
+
 ## Технічне оновлення фази 2
 
 Реалізовано мінімальний `ml_service/app.py` FastAPI: loopback, bearer auth через environment, обмеження тіла 256 KiB, перевірка контракту/версії `climate-v1`, лише 503 `model_unavailable`, `value=null`. `climate_health/ml_client.py` перевіряє локальну адресу, забороняє redirects, задає connect/read timeout, перевіряє unavailable response/model_version/data_quality. Доступний прогноз або невідома версія відхиляються: модель не схвалена й не створена. Flask `/api/v1/predictions` не передає внутрішній token браузеру. Реальна HTTP-взаємодія перевірена синтетичною фікстурою без БД; це не експеримент прогнозної точності.
