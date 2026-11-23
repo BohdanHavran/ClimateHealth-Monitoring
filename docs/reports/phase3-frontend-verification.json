@@ -1,0 +1,31 @@
+[
+  {
+    "command": "npm run lint",
+    "returncode": 0,
+    "stdout": "\n> climate-health-frontend@0.2.0 lint\n> eslint .\n\n",
+    "stderr": ""
+  },
+  {
+    "command": "npm run typecheck",
+    "returncode": 0,
+    "stdout": "\n> climate-health-frontend@0.2.0 typecheck\n> tsc --noEmit\n\n",
+    "stderr": ""
+  },
+  {
+    "command": "npm test",
+    "returncode": 0,
+    "stdout": "\n> climate-health-frontend@0.2.0 test\n> vitest run\n\n\n RUN  v5.1.1 D:/Університет ІППТ/Магістратура 5 курс/Диплом/Диплом 2.0/frontend\n\n\n Test Files  2 passed (2)\n      Tests  16 passed (16)\n   Start at  16:38:16\n   Duration  3.26s (tests 69%, environment 20%, setup 6%, import 4%, transform 2%)\n\n",
+    "stderr": ""
+  },
+  {
+    "command": "npm run build",
+    "returncode": 0,
+    "stdout": "\n> climate-health-frontend@0.2.0 build\n> tsc -b && vite build\n\nvite v8.3.8 building client environment for production...\ntransforming...\n✓ 655 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                             0.45 kB │ gzip:   0.34 kB\ndist/assets/index-BfR3kWQ9.css              9.53 kB │ gzip:   2.84 kB\ndist/assets/LeafletMap-vh-t_kPv.css        15.09 kB │ gzip:   6.36 kB\ndist/assets/MapPage-CK8ZeVQZ.js             5.28 kB │ gzip:   2.24 kB\ndist/assets/LeafletMap-DtHvi4P7.js        154.21 kB │ gzip:  45.45 kB\ndist/assets/index-_BJthJrs.js             248.65 kB │ gzip:  77.42 kB\ndist/assets/ObservationChart-CKyZQDkI.js  493.62 kB │ gzip: 167.24 kB\n\n✓ built in 160ms\n",
+    "stderr": ""
+  },
+  {
+    "command": "node tests/test_frontend.cjs",
+    "returncode": 0,
+    "stdout": "PASS: 5 HTML-escaping assertions (not browser/E2E coverage)\n"
+  }
+]

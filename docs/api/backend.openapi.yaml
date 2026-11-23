@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: ClimateHealth Flask API
-  version: 0.2.0
+  version: 0.3.0
   description: >-
     JSON API другої фази. MySQL тільки для читання. Походження й територію
     історичних записів не підтверджено. HRI не є медичним прогнозом.
@@ -70,6 +70,18 @@ paths:
         '400': {$ref: '#/components/responses/Invalid'}
         '429': {$ref: '#/components/responses/RateLimited'}
         '503': {$ref: '#/components/responses/Unavailable'}
+  /api/v1/places/search:
+    get:
+      summary: Пошук наявних населених пунктів у MySQL за name/asciiname
+      description: Параметризований LIKE з екрануванням %, _ та символу escape. Не геокодує історичні climate_data.
+      parameters:
+        - {in: query, name: q, required: true, schema: {type: string, minLength: 2, maxLength: 100}}
+        - {in: query, name: limit, schema: {type: integer, minimum: 1, maximum: 20, default: 10}}
+      responses:
+        '200': {description: 'data зі списком id/name/lat/lon/population; meta.source=mysql:ua_places, received_at=час відповіді UTC'}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '429': {$ref: '#/components/responses/RateLimited'}
+        '503': {$ref: '#/components/responses/Unavailable'}
   /api/v1/hri:
     post:
       summary: Чисте нечітке обчислення без доступу до БД
@@ -93,12 +105,30 @@ paths:
         '503': {$ref: '#/components/responses/Unavailable'}
   /api/v1/weather:
     get:
-      summary: Поточна погода за містом через OpenWeather з TTL 300 секунд
-      description: solar є апроксимацією за хмарністю, а не виміряною радіацією.
+      summary: Поточні модельні умови за координатами або legacy OpenWeather за містом
+      description: >-
+        Передати або lat+lon (Open-Meteo без ключа), або city (існуючий OpenWeather з локальним ключем).
+        Не поєднувати ці варіанти. Open-Meteo повертає модельну shortwave_radiation, не вимірювання станції;
+        legacy OpenWeather solar залишається апроксимацією за хмарністю. Дані не записуються в MySQL.
+        TTL 300 с. Open-Meteo доступний для некомерційного використання з видимою CC BY 4.0 attribution.
       parameters:
-        - {in: query, name: city, required: true, schema: {type: string, minLength: 1, maxLength: 100}}
+        - {in: query, name: city, schema: {type: string, minLength: 1, maxLength: 100}}
+        - {in: query, name: lat, schema: {type: number, minimum: -90, maximum: 90}}
+        - {in: query, name: lon, schema: {type: number, minimum: -180, maximum: 180}}
       responses:
-        '200': {description: 'data.avg_temp/solar/humidity та meta.source/solar_method/cache_ttl_seconds'}
+        '200':
+          description: 'Open-Meteo: CurrentWeather у data; legacy: avg_temp/solar/humidity. meta.received_at завжди час відповіді, не час спостереження.'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    anyOf:
+                      - {$ref: '#/components/schemas/CurrentWeather'}
+                      - {type: object, required: [avg_temp, solar, humidity]}
+                  meta: {type: object}
         '400': {$ref: '#/components/responses/Invalid'}
         '429': {$ref: '#/components/responses/RateLimited'}
         '503': {$ref: '#/components/responses/Unavailable'}
@@ -121,6 +151,22 @@ paths:
         '503': {description: data.reason model_unavailable/service_timeout/service_unavailable/service_not_configured/service_configuration_invalid/model_contract_mismatch; data.value=null}
 components:
   schemas:
+    CurrentWeather:
+      type: object
+      required: [avg_temp, solar, humidity, lat, lon, source, data_time, fetched_at, cached, data_kind, solar_method, quality_issues]
+      properties:
+        avg_temp: {type: number, minimum: -100, maximum: 70}
+        solar: {type: number, minimum: 0, maximum: 1600}
+        humidity: {type: number, minimum: 0, maximum: 100}
+        lat: {type: number, minimum: -90, maximum: 90}
+        lon: {type: number, minimum: -180, maximum: 180}
+        source: {type: string, enum: [Open-Meteo]}
+        data_time: {type: string, format: date-time, description: Час поточних модельних значень UTC}
+        fetched_at: {type: string, format: date-time, description: Час отримання від провайдера; не змінюється при cache hit}
+        cached: {type: boolean}
+        data_kind: {type: string, enum: [model_current_conditions]}
+        solar_method: {type: string, enum: [model_shortwave_radiation]}
+        quality_issues: {type: array, items: {type: string}}
     Observation:
       type: object
       required: [id, year, month, avg_temp, solar_irradiance, humidity, quality_issues]

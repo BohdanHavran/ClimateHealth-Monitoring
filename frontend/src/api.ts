@@ -2,7 +2,7 @@ export type Observation = {
   id: number; year: number | null; month: number | null; avg_temp: number | null;
   solar_irradiance: number | null; humidity: number | null; quality_issues: string[];
 }
-export type ObservationPage = { data: Observation[]; meta: { next_after_id: number | null } }
+export type ObservationPage = { data: Observation[]; meta: { next_after_id: number | null; received_at?: string } }
 
 function nullableNumber(value: unknown): value is number | null {
   return value === null || (typeof value === 'number' && Number.isFinite(value))
@@ -32,5 +32,7 @@ export async function getObservations(year: string, afterId: number, signal: Abo
   if (cursor !== null && (typeof cursor !== 'number' || !Number.isSafeInteger(cursor) || cursor <= afterId)) {
     throw new Error('Некоректна пагінація сервера.')
   }
-  return { data: page.data, meta: { next_after_id: cursor as number | null } }
+  const receivedAt = (page.meta as Record<string, unknown>).received_at
+  return { data: page.data, meta: { next_after_id: cursor as number | null,
+    received_at: typeof receivedAt === 'string' && Number.isFinite(Date.parse(receivedAt)) ? receivedAt : undefined } }
 }

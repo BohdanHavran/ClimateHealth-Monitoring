@@ -1,6 +1,7 @@
 """Versioned JSON API. Reads MySQL; no schema creation or data writes."""
 
 import os
+from datetime import datetime, timezone
 
 from flask import Blueprint, current_app, jsonify, request
 from werkzeug.exceptions import HTTPException
@@ -11,15 +12,24 @@ from .repository import ClimateRepository, schema_report
 from .services import analyze_hri
 from .validation import bounded_integer, finite_number
 from .weather import CachedWeatherProvider
+from .open_meteo import OpenMeteoProvider
 
 
 def create_api(get_connection, weather_provider=None):
     api = Blueprint("api_v1", __name__, url_prefix="/api/v1")
     limiter = WindowLimiter(60, 60)
     weather = weather_provider or CachedWeatherProvider(lambda: os.getenv("OPENWEATHER_API_KEY"))
+    open_meteo = OpenMeteoProvider()
 
     def success(data, **meta):
-        return jsonify(data=data, meta={"api_version": "v1", **meta})
+        return jsonify(
+            data=data,
+            meta={
+                "api_version": "v1",
+                "received_at": datetime.now(timezone.utc).isoformat(),
+                **meta,
+            },
+        )
 
     def failure(code, message, status):
         return jsonify(error={"code": code, "message": message}), status
@@ -98,12 +108,39 @@ def create_api(get_connection, weather_provider=None):
         limit = bounded_integer(request.args.get("limit", "100"), "limit", 1, 1000)
         return success(ClimateRepository(get_connection()).places(*bounds, limit))
 
+    @api.get("/places/search")
+    def search_places():
+        query = request.args.get("q", "").strip()
+        if not 2 <= len(query) <= 100:
+            raise ValueError("Введіть від 2 до 100 символів назви")
+        limit = bounded_integer(request.args.get("limit", "10"), "limit", 1, 20)
+        return success(
+            ClimateRepository(get_connection()).search_places(query, limit),
+            source="mysql:ua_places",
+        )
+
     @api.post("/hri")
     def hri():
         return success(analyze_hri(request.get_json()))
 
     @api.get("/weather")
     def current_weather():
+        if "lat" in request.args or "lon" in request.args:
+            if "city" in request.args:
+                raise ValueError("Передайте місто або координати, не обидва варіанти")
+            lat = finite_number(request.args.get("lat"), "lat", -90, 90)
+            lon = finite_number(request.args.get("lon"), "lon", -180, 180)
+            try:
+                data = open_meteo.coordinates(lat, lon)
+            except (ValueError, KeyError, TypeError) as error:
+                raise RuntimeError("Invalid weather source data") from error
+            return success(
+                data,
+                source="Open-Meteo",
+                license="CC-BY-4.0",
+                attribution_url="https://open-meteo.com/",
+                cache_ttl_seconds=300,
+            )
         data = weather.city(request.args.get("city"))
         return success(
             data,

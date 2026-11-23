@@ -89,3 +89,16 @@ class ClimateRepository:
             ):
                 raise RuntimeError("Invalid geographic source data")
         return rows
+
+    def search_places(self, query, limit):
+        escaped = query.replace("=", "==").replace("%", "=%").replace("_", "=_")
+        pattern = "%" + escaped + "%"
+        with self.connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute(
+                "SELECT geoname_id AS id,name,latitude AS lat,longitude AS lon,population "
+                "FROM ua_places WHERE (name LIKE %s ESCAPE '=' OR asciiname LIKE %s ESCAPE '=') "
+                "AND latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180 "
+                "ORDER BY population DESC,geoname_id LIMIT %s",
+                (pattern, pattern, limit),
+            )
+            return list(cursor.fetchall())

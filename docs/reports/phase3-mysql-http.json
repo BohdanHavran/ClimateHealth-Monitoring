@@ -1,0 +1,22 @@
+{
+  "checks": [
+    {
+      "path": "/health/ready",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/observations?limit=5",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/places/search?q=Lviv&limit=5",
+      "status": 200
+    },
+    {
+      "path": "/map",
+      "status": 200
+    }
+  ],
+  "database_writes": 0,
+  "schema_writes": 0
+}
