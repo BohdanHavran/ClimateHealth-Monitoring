@@ -1,0 +1,35 @@
+# Resource-free review root. No workload modules are wired yet.
+# Do not apply until the deployment scenario, IAM and saved plan are approved.
+provider "aws" {
+  region              = var.region
+  allowed_account_ids = [var.account_id]
+  default_tags {
+    tags = {
+      Project     = "ClimateHealth"
+      Environment = "dev"
+      ManagedBy   = "Terraform"
+      Owner       = var.owner
+    }
+  }
+}
+
+variable "account_id" {
+  type        = string
+  description = "Approved AWS account, not root credentials."
+  validation {
+    condition     = can(regex("^[0-9]{12}$", var.account_id))
+    error_message = "Provide the approved 12-digit account ID."
+  }
+}
+variable "region" {
+  type    = string
+  default = "us-east-1"
+  validation {
+    condition     = var.region == "us-east-1"
+    error_message = "A new region requires a reviewed architecture and cost estimate."
+  }
+}
+variable "owner" {
+  type        = string
+  description = "Responsible project owner; no credentials."
+}

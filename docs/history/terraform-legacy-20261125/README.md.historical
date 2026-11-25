@@ -1,0 +1,5 @@
+# ClimateHealth — Terraform entry point
+
+Єдиний активний root: [aws/](aws/README.md), HCP VCS-driven workspaces з незалежними state/variables, manual apply. Не виконувати Terraform/Docker локально або HCP runs без дозволу.
+
+Файли .tf безпосередньо в цьому батьківському каталозі — незмінений історичний каркас іншої платформи, не ціль CI/deployment. Попередній AWS EC2/S3-state scaffold точно архівовано у history/aws-ec2-s3-state-20261124 із .historical suffix і manifest hashes; він не є іншим root. Жодних state migrations/resources не виконували.

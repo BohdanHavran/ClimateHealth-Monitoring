@@ -1,8 +1,8 @@
-# ClimateHealth Monitoring
+# ClimateHealth
 
 Дослідницька система моніторингу кліматичних умов: Flask + MySQL, React/TypeScript/Vite, ECharts і React-Leaflet. HRI — наявні 27 нечітких правил, **не медично підтверджена ймовірність захворювання**. Прогнозна нейромережа ще не навчена; ML HTTP-сервіс чесно повертає `model_unavailable`.
 
-Основна програмна база — цей каталог (`Диплом 2.0`). [Репозиторій](https://github.com/BohdanHavran/ClimateHealth-Monitoring), гілка `main`. Application checks і Secret check успішні для базового `312c470`; результати поточного етапу наведено у звіті фази 3. Статус кожного наступного коміту перевіряти в Actions. Кожен push потребує окремого дозволу. Історичні звіти описують стан відповідної фази, не поточний Git status.
+Програмна система проєкту «Диплом». [Репозиторій](https://github.com/BohdanHavran/ClimateHealth-Monitoring), гілка `main`. Редизайн зафіксовано комітом `4b3033b`; [перевірки перед публікацією AWS-матеріалів](docs/AWS_PUBLICATION_CHECKS.md) описують наступний інфраструктурний етап. Фактичний статус кожного коміту перевіряти в [GitHub Actions](https://github.com/BohdanHavran/ClimateHealth-Monitoring/actions). Кожен push потребує окремого дозволу. Історичні звіти описують стан відповідної фази, не поточний Git status.
 
 ## Реалізований інтерфейс
 
@@ -56,10 +56,14 @@ ML за потреби: `.venv/Scripts/python.exe -m uvicorn ml_service.app:app 
 
 Browser smoke: `scripts/browser_smoke_phase3.cjs` використовує вже наявні Playwright/Edge, нічого не завантажує; `PLAYWRIGHT_MODULE` може вказати встановлений пакет. Потрібні активні read-only Flask і Vite. Це реальна перевірка без підміни MySQL/погоди. Screenshots залишаються в ігнорованій `.local-verification/`. Для обмеженого середовища мережевий доступ до OSM tiles може потребувати окремого дозволу.
 
+## AWS: архітектура та бюджет
+
+[Рішення AWS](docs/adr/0005-ecs-cloudfront-hcp-terraform.md), [архітектура](docs/AWS_ARCHITECTURE.md), [кошторис $100](docs/AWS_COST_ESTIMATE.md), [Terraform-перехід](docs/TERRAFORM_GUIDE.md). Регіон/сценарій/запуск потребують погодження; заборона Docker/Terraform/cloud execution лишається чинною. Єдиний AWS root керується через HCP Terraform (VCS remote plan/manual apply), не S3 state. [HCP setup](docs/HCP_TERRAFORM.md), [власні модулі](docs/TERRAFORM_MODULE_REUSE.md). Історичні конфігурації збережені, не активні.
+
 ## Стан і подальша робота
 
 [Звіт фази 3](docs/PHASE3_REPORT.md), [API](docs/api/backend.openapi.yaml), [архітектура](docs/ARCHITECTURE.md), [ML-протокол](docs/ML_DATA_PROTOCOL.md), [CI](docs/CI_CD_PIPELINE.md). Віддалені перевірки запускаються після окремо погодженого push.
 
-Поточні quotas/cache — process-local: рестарт і декілька workers змінюють сумарний бюджет. Public auth/TLS, глобальні квоти, backup/restore та production deploy ще не реалізовані. Docker/Terraform jobs **вимкнені**, конфігурації збережені; локально ці інструменти не запускати. DigitalOcean/Kubernetes не використовуються. Word/PDF не змінюються.
+Поточні quotas/cache — process-local: рестарт і декілька workers змінюють сумарний бюджет. Public auth/TLS, глобальні квоти, backup/restore та production deploy ще не реалізовані. Docker/Terraform jobs **вимкнені**, конфігурації збережені; локально ці інструменти не запускати. Цільова платформа — AWS; ресурси ще не створено. Kubernetes/EKS/Helm не використовуються. Word/PDF не змінюються.
 
 `.env`, `.secrets`, `.venv`, архіви, приватні дані, DB metadata, screenshots і Terraform state/plans виключені з Git. Первинний архів містить старий API-ключ: його не публікувати; ключ у провайдера потрібно відкликати/замінити.

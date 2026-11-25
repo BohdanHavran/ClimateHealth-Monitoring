@@ -1,0 +1,12 @@
+{
+  "source": "Owner-provided golfer2golfer Terraform modules",
+  "sha256": {
+    "D:\\Робота\\Codica\\golfer2golfer\\terraform\\modules\\ecr\\main.tf": {
+      "value": "1e6275dddf8c392ed6be8bd4402e0e95886d3d7d0bc71e3f7586ade60389902d", "review": "Source SHA256 integrity checksum; # pragma: allowlist secret"
+    },
+    "D:\\Робота\\Codica\\golfer2golfer\\terraform\\modules\\ecr\\vars.tf": {
+      "value": "340d0dcd8dfbab8888ec94b75fa776279a10e2f45a3118c9e6e91bea5c5f2cc9", "review": "Source SHA256 integrity checksum; # pragma: allowlist secret"
+    }
+  },
+  "copied": "Only adapted ECR repository block and ecr_names variable block"
+}

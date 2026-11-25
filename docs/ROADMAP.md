@@ -1,37 +1,26 @@
-# Дорожня карта
+# Диплом — дорожня карта ClimateHealth
 
-## Уточнення після фази 2
+24.11.2026. Зберігаються виконані фази1–3, React redesign4b3033b, Flask/MySQL/API/27HRI rules та ML unavailable boundary. GitHub main; push не дозволений поточним завданням.
 
-Реалізовано перше виділення модулів, versioned reader API, React-історію/ECharts, local FastAPI auth/відмови, MLClient, per-process rate limits/cache, read-only транзакції та відокремлення DDL. Реальні browser/HTTP перевірки наведено у `PHASE2_REPORT.md`. Git/SSH/origin підготовлено; коміт очікує автора, push — окремого підтвердження.
+## Підготовлено
+- Доступні28 власних модулів перевірені; ECR безпосередньо адаптовано, решта потрібних компонентів спрощені. Оригінали незмінні.
+- Один AWS root і8 локальних модулів: ECS EC2/ASG/CP, ALB, private S3/OAC/CF, private MySQL, optional CPU AI, SG/VPC.
+- HCP dev/production design, exact phase OIDC trust examples, VCS trigger root+modules, Auto Apply=false; не підключено/не запускалося.
+- 4800 offline cost combinations80/730год, ECSmicro/small/Fargate/Compose, ALB/DB/AI/NAT/endpoints/CF alternatives й limitations.
+- Application release draft (не активний), source-only GitHub infrastructure checks, offline ECS revision helper/tests, ML unavailable packaging без моделі.
 
-Найближче: завершити авторство/коміт і погоджений push → перевірити remote CI → погодити reader account та backup/recovery → розширити React HRI/карту й compatibility tests. До погодження не виконувати записи/DDL/GRANT у climate_db. Дослідницька ціль і медичний набір відкриті. Docker/Terraform/DigitalOcean та всі їх перевірки відкладені; нижче збережено довгостроковий план, а не дозвіл запускати інфраструктуру зараз.
+## Наступні gates
+1. Затвердити ECSsmall/ALB demo window/RDS/AIoff, us-east-1 та data residency, gross monthly budget$35 й credit eligibility/expiration. Альтернативу Compose безALB для24/7 можна обрати після зміни пріоритету.
+2. Узгодити HCP organization/project/workspace names, доступний Free plan/permissions, VCS connection, окремі HCP phase roles та GitHub release roles, MFA bootstrap. До дозволу не підключати repo й не запускати HCP.
+3. Після дозволу HCP init/fmt/schema/plan, справжній lockfile, module/policy tests; Linux Docker builds/image scans; жодних локальних Terraform/Docker зараз.
+4. Approved AL2023 AMI/image digest, domain/Route53/ACM, runtime SSM reader, MySQL TLS client support, дозволені дані/backup/restore, AI AMI agent/CA/token. Вони блокують реальний запуск, не маскуються успішною source перевіркою.
+5. Окреме схвалення конкретного remote plan перед apply; application CI/CD activation після image/health/rollback tests. Application release не робить Terraform apply.
+6. Benchmark micro/small/Fargate та реального CPU AI за погодженим протоколом; max2 deployment capacity тільки з бюджетом. Немає zero-downtime гарантії на одному host.
+7. Узгоджений app window: manual HCP ALB/service lifecycle, RDS/storage persistent. Budgets не hard cap, стопtasks не припиняє ALB/RDS fees. Ніякого auto-destroy.
 
-## Етап 1 — виконані початкові зміни
+## Науковий напрям
+Валідація HRI й provenance історії; погодження легального медичного target/territory/available_at; baselines→MLP із chronological split/fit-only-train. Немає погодженої медичної цілі чи дозволу training. PyTorch модель не створено, model_unavailable чесний. Word/локальнаMySQL не змінюються.
 
-Валідація входів, конфігурація й секрети, контрольовані помилки, health probes, екранування HTML, вимкнення автоматичного прогрівання карти, локальне середовище, контрактні тести, інфраструктурні каркаси та документація. Реальний MySQL перевірено без змін. Модель і SPA не реалізовано.
+Поточна структура після перенесення 25.11.2026: один root `infrastructure/terraform`, `aws_region`/`aws_account_id` обовʼязкові без defaults; HCP trigger `/infrastructure/terraform/**`, Auto Apply=false. Наступне — погодження account/region/HCP organization, IAM/AMI/DNS/DB prerequisites, потім окремо дозволений remote plan. [Звіт перенесення](TERRAFORM_ROOT_SIMPLIFICATION.md).
 
-## Етап 2 — працездатна модульна основа
-
-1. Зафіксувати backup та перевірити відновлення на окремій тестовій схемі після погодження. Винести `CREATE TABLE` із HTTP-маршрутів у явне адміністрування/міграції; bootstrap не є міграцією наявної БД.
-2. Підготувати та погодити окремий MySQL account із доступом лише до потрібних таблиць: SELECT для довідників/історії, SELECT/INSERT/UPDATE для кешу. Без CREATE/DROP/GRANT. Імпорт географічного довідника виконує окрема адміністративна роль. Root використовувався лише в дозволеній діагностиці; новий account ще не створено.
-3. Виділити fuzzy engine, WeatherProvider, репозиторії й HTTP-маршрути зі збереженням контрактних тестів. Порівняти вихідні HRI на контрольованих входах до/після виділення.
-4. Додати API quotas/rate limiting, контроль кешу та обмеження дорогої генерації графіків. До цього публічне розгортання не готове. Обрати вимоги автентифікації; додати TLS, trusted proxy settings і перевірку відновлення.
-5. Перевірити Linux image/Compose, залежності й сканери на доступному Docker; зафіксувати транзитивний lock/digests та SBOM. Віддалений Git і CI налаштовувати окремо, без автоматичної публікації локальних матеріалів.
-
-Критерій завершення: еквівалентність HRI, контрактні й ізольовані MySQL integration tests, запуск без root/DDL у HTTP, перевірка помилок провайдера, реальне відновлення backup.
-
-## Етап 3 — інтерфейс та дані
-
-React/TypeScript/Vite + Leaflet + ECharts обрано як цільове рішення, не переписувати весь Jinja одразу. Спочатку карта/аналіз через стабільний API; браузерні тести, доступність і межі показників. Паралельно отримати легальний набір із медичною ціллю, provenance, географією, одиницями, часовими мітками події й доступності. Припинити експеримент, якщо сумісної цілі немає; погодити корекцію дослідницької задачі.
-
-## Етап 4 — дослідницький ML
-
-Узгодити територію, ціль, горизонт, вибірку й метрики. Persistence/seasonal baseline та регуляризована статистична модель → MLP; GRU/LSTM лише за достатніх послідовностей і результатів порівняння. Rolling-origin split, fit preprocessing тільки на train, контроль затримок публікації та витоку. Жодних медичних висновків із псевдоміток HRI. Докладно: `DATA_STRATEGY.md`, `ML_INTEGRATION_PLAN.md`.
-
-Критерій прийняття: відтворювані дані й конфігурації, незалежний test, порівняння з baseline, інтервали/обмеження й журнал невдалих дослідів. Не гарантується перевага нейромережі.
-
-## Етап 5 — приватний inference і перевірене розгортання
-
-FastAPI/PyTorch на окремому CPU Droplet у VPC після створення перевіреної моделі. Schema/version checks, service auth + TLS, timeout/circuit breaker; за недоступності `model_unavailable`, не нульовий прогноз. Навантажувальні вимірювання визначають RAM/CPU. Terraform state/locking, staging, ручне підтвердження production, rollback та моніторинг. Платні ресурси лише після окремого дозволу.
-
-Академічні Word/PDF на цьому етапі не редагуються. Подальша синхронізація тексту — окреме завдання після фактичних результатів.
+Повний стан: [попередній ECS/HCP report](AWS_ECS_HCP_REPORT.md), [architecture](AWS_ARCHITECTURE.md), [cost](AWS_COST_ESTIMATE.md), [HCP](HCP_TERRAFORM.md).

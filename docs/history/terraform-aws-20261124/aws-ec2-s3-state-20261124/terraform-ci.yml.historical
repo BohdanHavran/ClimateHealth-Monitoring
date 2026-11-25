@@ -1,0 +1,37 @@
+name: AWS Terraform checks (deferred)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    working-directory: infrastructure/terraform/aws
+jobs:
+  validate:
+    if: ${{ false }} # AWS design phase: all Terraform execution remains deferred.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: 1.11.4
+          terraform_wrapper: false
+      - name: Format
+        run: terraform fmt -check -recursive
+      - name: Initialize without state or credentials
+        run: |
+          for target in bootstrap modules/networking modules/security environments/dev environments/production; do
+            terraform -chdir="$target" init -backend=false -input=false
+          done
+      - name: Validate schema
+        run: |
+          for target in bootstrap modules/networking modules/security environments/dev environments/production; do
+            terraform -chdir="$target" validate -no-color
+          done
+      - name: Infrastructure security scan
+        run: |
+          python -m pip install 'checkov==3.2.498'
+          checkov --directory . --framework terraform --quiet --compact

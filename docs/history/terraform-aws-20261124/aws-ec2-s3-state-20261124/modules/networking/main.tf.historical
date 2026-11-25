@@ -1,0 +1,80 @@
+# Proposed module: not instantiated by any environment root.
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "= 6.74.0"
+    }
+  }
+}
+variable "name" { type = string }
+variable "availability_zones" {
+  type = list(string)
+  validation {
+    condition     = length(var.availability_zones) == 2 && length(distinct(var.availability_zones)) == 2
+    error_message = "Two distinct approved AZs are required for a future RDS subnet group."
+  }
+}
+variable "artifact_bucket_arn" {
+  type        = string
+  description = "Approved private artifact bucket; never the Terraform state bucket."
+}
+resource "aws_vpc" "this" {
+  cidr_block           = "10.42.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags = { Name = var.name }
+}
+resource "aws_internet_gateway" "public" { vpc_id = aws_vpc.this.id }
+resource "aws_subnet" "application" {
+  vpc_id                  = aws_vpc.this.id
+  cidr_block              = "10.42.0.0/24"
+  availability_zone       = var.availability_zones[0]
+  map_public_ip_on_launch = false
+}
+resource "aws_subnet" "private" {
+  for_each = { a = 0, b = 1 }
+  vpc_id                  = aws_vpc.this.id
+  cidr_block              = cidrsubnet("10.42.0.0/16", 8, each.value + 1)
+  availability_zone       = var.availability_zones[each.value]
+  map_public_ip_on_launch = false
+}
+resource "aws_route_table" "public" { vpc_id = aws_vpc.this.id }
+resource "aws_route" "internet" {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.public.id
+}
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.application.id
+  route_table_id = aws_route_table.public.id
+}
+# No private default route, NAT, IPv6 egress or paid interface endpoints.
+resource "aws_route_table" "private" { vpc_id = aws_vpc.this.id }
+resource "aws_route_table_association" "private" {
+  for_each       = aws_subnet.private
+  subnet_id      = each.value.id
+  route_table_id = aws_route_table.private.id
+}
+data "aws_region" "current" {}
+data "aws_iam_policy_document" "artifact_endpoint" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${var.artifact_bucket_arn}/*"]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+  }
+}
+resource "aws_vpc_endpoint" "artifacts" {
+  vpc_id            = aws_vpc.this.id
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.private.id]
+  policy            = data.aws_iam_policy_document.artifact_endpoint.json
+}
+output "vpc_id" { value = aws_vpc.this.id }
+output "application_subnet_id" { value = aws_subnet.application.id }
+output "private_subnet_ids" { value = { for k, v in aws_subnet.private : k => v.id } }
+output "s3_prefix_list_id" { value = aws_vpc_endpoint.artifacts.prefix_list_id }

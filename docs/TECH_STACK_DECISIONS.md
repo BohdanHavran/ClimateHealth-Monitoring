@@ -1,5 +1,9 @@
 # Вибір технологічного стеку
 
+## Актуальне хмарне рішення — 24.11.2026
+
+AWS прийнято як єдину ціль: EC2 application/private CPU AI, MySQL на EC2 або RDS for MySQL, ECR, S3 frontend/artifacts, HCP Terraform state/remote execution, окремі HCP/GitHub OIDC. [ADR 0005](adr/0005-ecs-cloudfront-hcp-terraform.md) замінює попередні cloud-рішення. Flask/MySQL та React/TypeScript/Vite вже реалізовані; FastAPI HTTP повертає model_unavailable, PyTorch inference очікує погоджених даних/моделі. Початкові порівняння нижче збережені як обґрунтування вибору стеку, а не поточний стан реалізації.
+
 23.11.2026. Статус: **спроєктовано**. Порівняння якісне; порівняльні навантажувальні вимірювання цих фреймворків на цьому застосунку не проводилися. Рішення для першого етапу — стабілізувати Flask, а не змінювати одночасно мову, сервер і інтерфейс.
 
 ## Backend

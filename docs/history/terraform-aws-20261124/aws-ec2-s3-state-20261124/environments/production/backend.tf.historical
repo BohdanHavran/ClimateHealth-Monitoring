@@ -1,0 +1,4 @@
+# Populate only after separately approved state bootstrap.
+terraform {
+  backend "s3" {}
+}

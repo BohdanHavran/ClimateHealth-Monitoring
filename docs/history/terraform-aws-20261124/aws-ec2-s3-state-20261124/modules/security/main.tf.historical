@@ -1,0 +1,85 @@
+# Proposed security groups; no public ML/DB or SSH rule.
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "= 6.74.0"
+    }
+  }
+}
+variable "vpc_id" { type = string }
+variable "s3_prefix_list_id" { type = string }
+resource "aws_security_group" "application" {
+  name_prefix = "climatehealth-app-"
+  description = "Public HTTPS reverse proxy only"
+  vpc_id      = var.vpc_id
+}
+resource "aws_security_group" "ml" {
+  name_prefix = "climatehealth-ml-"
+  description = "Private TLS inference only from application"
+  vpc_id      = var.vpc_id
+}
+resource "aws_security_group" "mysql" {
+  name_prefix = "climatehealth-mysql-"
+  description = "Private MySQL only from application"
+  vpc_id      = var.vpc_id
+}
+resource "aws_vpc_security_group_ingress_rule" "https" {
+  security_group_id = aws_security_group.application.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+}
+resource "aws_vpc_security_group_ingress_rule" "acme_redirect" {
+  security_group_id = aws_security_group.application.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 80
+  to_port           = 80
+}
+resource "aws_vpc_security_group_ingress_rule" "private_ml" {
+  security_group_id            = aws_security_group.ml.id
+  referenced_security_group_id = aws_security_group.application.id
+  ip_protocol                  = "tcp"
+  from_port                    = 8001
+  to_port                      = 8001
+}
+resource "aws_vpc_security_group_ingress_rule" "private_mysql" {
+  security_group_id            = aws_security_group.mysql.id
+  referenced_security_group_id = aws_security_group.application.id
+  ip_protocol                  = "tcp"
+  from_port                    = 3306
+  to_port                      = 3306
+}
+resource "aws_vpc_security_group_egress_rule" "app_https" {
+  security_group_id = aws_security_group.application.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+}
+resource "aws_vpc_security_group_egress_rule" "app_ml" {
+  security_group_id            = aws_security_group.application.id
+  referenced_security_group_id = aws_security_group.ml.id
+  ip_protocol                  = "tcp"
+  from_port                    = 8001
+  to_port                      = 8001
+}
+resource "aws_vpc_security_group_egress_rule" "app_mysql" {
+  security_group_id            = aws_security_group.application.id
+  referenced_security_group_id = aws_security_group.mysql.id
+  ip_protocol                  = "tcp"
+  from_port                    = 3306
+  to_port                      = 3306
+}
+resource "aws_vpc_security_group_egress_rule" "ml_s3_only" {
+  security_group_id = aws_security_group.ml.id
+  prefix_list_id    = var.s3_prefix_list_id
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+}
+output "application_sg_id" { value = aws_security_group.application.id }
+output "ml_sg_id" { value = aws_security_group.ml.id }
+output "mysql_sg_id" { value = aws_security_group.mysql.id }

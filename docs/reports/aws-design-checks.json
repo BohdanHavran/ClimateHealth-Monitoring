@@ -1,0 +1,11 @@
+{
+  "yaml_and_disabled_execution_gates": "passed",
+  "json_examples_and_price_evidence": "passed",
+  "historical_infrastructure_files_unchanged": 8,
+  "application_design_HRI_API_and_tests_unchanged": "passed",
+  "redesign_commit_preserved": "passed",
+  "cost_arithmetic": "passed",
+  "local_document_links": "passed",
+  "terraform_schema_validation": "not_run_prohibited; hcl2 unavailable; no dependency installed",
+  "docker_aws_provisioning_mysql_word_push": "not_run"
+}

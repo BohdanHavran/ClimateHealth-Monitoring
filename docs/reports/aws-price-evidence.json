@@ -1,0 +1,158 @@
+{
+  "rds": {
+    "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+    "publicationDate": "2026-11-20T22:46:19Z",
+    "selected": [
+      {
+        "sku": "U4AUM7WC9VCSGAY9",
+        "attributes": {
+          "servicecode": "AmazonRDS",
+          "location": "US East (N. Virginia)",
+          "locationType": "AWS Region",
+          "instanceType": "db.t4g.micro",
+          "currentGeneration": "Yes",
+          "instanceFamily": "General purpose",
+          "vcpu": "2",
+          "physicalProcessor": "AWS Graviton2",
+          "memory": "1 GiB",
+          "storage": "EBS Only",
+          "networkPerformance": "Up to 5 Gigabit",
+          "processorArchitecture": "64-bit",
+          "engineCode": "2",
+          "databaseEngine": "MySQL",
+          "licenseModel": "No license required",
+          "deploymentOption": "Single-AZ",
+          "usagetype": "InstanceUsage:db.t4g.micro",
+          "operation": "CreateDBInstance:0002",
+          "instanceTypeFamily": "T4G",
+          "normalizationSizeFactor": "0.5",
+          "regionCode": "us-east-1",
+          "servicename": "Amazon Relational Database Service",
+          "unbundledLicensing": "FALSE"
+        },
+        "effectiveDate": "2026-11-01T00:00:00Z",
+        "price": {
+          "rateCode": "U4AUM7WC9VCSGAY9.JRTCKXETXF.6YS6EN2CT7",
+          "description": "$ 0.016 per RDS db.t4g.micro Single-AZ instance hour (or partial hour) running MySQL",
+          "beginRange": "0",
+          "endRange": "Inf",
+          "unit": "Hrs",
+          "pricePerUnit": {
+            "USD": "0.0160000000"
+          },
+          "appliesTo": []
+        }
+      },
+      {
+        "sku": "EKJ27TU85G7S4RP9",
+        "attributes": {
+          "servicecode": "AmazonRDS",
+          "location": "US East (N. Virginia)",
+          "locationType": "AWS Region",
+          "instanceType": "db.t4g.micro",
+          "instanceFamily": "General purpose",
+          "vcpu": "2",
+          "physicalProcessor": "AWS Graviton2",
+          "memory": "1 GiB",
+          "processorArchitecture": "64-bit",
+          "engineCode": "2",
+          "databaseEngine": "MySQL",
+          "licenseModel": "No license required",
+          "deploymentOption": "Single-AZ",
+          "usagetype": "UnusedBox:db.t4g.micro",
+          "operation": "CreateDBInstance:0002",
+          "normalizationSizeFactor": "0.5",
+          "regionCode": "us-east-1",
+          "servicename": "Amazon Relational Database Service"
+        },
+        "effectiveDate": "2026-11-01T00:00:00Z",
+        "price": {
+          "rateCode": "EKJ27TU85G7S4RP9.JRTCKXETXF.6YS6EN2CT7",
+          "description": "$ 0.016 per RDS db.t4g.micro Single-AZ unused capacity reservation hour (or partial hour) for MySQL",
+          "beginRange": "0",
+          "endRange": "Inf",
+          "unit": "Hrs",
+          "pricePerUnit": {
+            "USD": "0.0160000000"
+          },
+          "appliesTo": []
+        }
+      },
+      {
+        "sku": "H4R2WBBMX6VRJG4S",
+        "attributes": {
+          "servicecode": "AmazonRDS",
+          "location": "US East (N. Virginia)",
+          "locationType": "AWS Region",
+          "storageMedia": "SSD",
+          "volumeType": "General Purpose-GP3",
+          "minVolumeSize": "5 GB",
+          "maxVolumeSize": "16 TB",
+          "engineCode": "2",
+          "databaseEngine": "MySQL",
+          "deploymentOption": "Single-AZ",
+          "usagetype": "RDS:GP3-Storage",
+          "operation": "CreateDBInstance:0002",
+          "regionCode": "us-east-1",
+          "servicename": "Amazon Relational Database Service"
+        },
+        "effectiveDate": "2026-11-01T00:00:00Z",
+        "price": {
+          "rateCode": "H4R2WBBMX6VRJG4S.JRTCKXETXF.6YS6EN2CT7",
+          "description": "$0.115 per GB-month of provisioned GP3 storage running MySQL",
+          "beginRange": "0",
+          "endRange": "Inf",
+          "unit": "GB-Mo",
+          "pricePerUnit": {
+            "USD": "0.1150000000"
+          },
+          "appliesTo": []
+        }
+      }
+    ]
+  },
+  "provider": {
+    "source": "https://registry.terraform.io/v1/providers/hashicorp/aws",
+    "version": "6.74.0",
+    "published_at": "2026-11-23T23:04:55Z"
+  },
+  "ec2": {
+    "source": "https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/ec2/USD/current/ec2-ondemand-without-sec-sel/US%20East%20%28N.%20Virginia%29/Linux/index.json",
+    "selected": [
+      {
+        "rateCode": "NN4EGUUQRWVYP98C.JRTCKXETXF.6YS6EN2CT7",
+        "price": "0.0416000000",
+        "Location": "US East (N. Virginia)",
+        "Instance Family": "General purpose",
+        "vCPU": "2",
+        "Instance Type": "t3.medium",
+        "Memory": "4 GiB",
+        "Storage": "EBS only",
+        "Network Performance": "Up to 5 Gigabit",
+        "plc:OperatingSystem": "Linux",
+        "plc:InstanceFamily": "General Purpose",
+        "Operating System": "Linux",
+        "Pre Installed S/W": "NA",
+        "License Model": "No License required"
+      },
+      {
+        "rateCode": "QA3NBPZEQKZ2K9AR.JRTCKXETXF.6YS6EN2CT7",
+        "price": "0.0208000000",
+        "Location": "US East (N. Virginia)",
+        "Instance Family": "General purpose",
+        "vCPU": "2",
+        "Instance Type": "t3.small",
+        "Memory": "2 GiB",
+        "Storage": "EBS only",
+        "Network Performance": "Up to 5 Gigabit",
+        "plc:OperatingSystem": "Linux",
+        "plc:InstanceFamily": "General Purpose",
+        "Operating System": "Linux",
+        "Pre Installed S/W": "NA",
+        "License Model": "No License required"
+      }
+    ]
+  },
+  "retrieved_on": "2026-11-24",
+  "account_accessed": false
+}

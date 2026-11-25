@@ -1,0 +1,143 @@
+{
+  "date": "2026-11-25",
+  "active_root": "infrastructure/terraform",
+  "moved_files": [
+    {
+      "from": "infrastructure/terraform/aws/main.tf",
+      "to": "infrastructure/terraform/main.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/output.tf",
+      "to": "infrastructure/terraform/output.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/provider.tf",
+      "to": "infrastructure/terraform/provider.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/README.md",
+      "to": "infrastructure/terraform/README.md"
+    },
+    {
+      "from": "infrastructure/terraform/aws/variable.tf",
+      "to": "infrastructure/terraform/variable.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/ai/main.tf",
+      "to": "infrastructure/terraform/modules/ai/main.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/ai/terraform.tf",
+      "to": "infrastructure/terraform/modules/ai/terraform.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/alb/main.tf",
+      "to": "infrastructure/terraform/modules/alb/main.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/alb/terraform.tf",
+      "to": "infrastructure/terraform/modules/alb/terraform.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/ecr/main.tf",
+      "to": "infrastructure/terraform/modules/ecr/main.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/ecr/terraform.tf",
+      "to": "infrastructure/terraform/modules/ecr/terraform.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/ecr/variable.tf",
+      "to": "infrastructure/terraform/modules/ecr/variable.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/ecs-backend/main.tf",
+      "to": "infrastructure/terraform/modules/ecs-backend/main.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/ecs-backend/terraform.tf",
+      "to": "infrastructure/terraform/modules/ecs-backend/terraform.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/frontend/main.tf",
+      "to": "infrastructure/terraform/modules/frontend/main.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/frontend/terraform.tf",
+      "to": "infrastructure/terraform/modules/frontend/terraform.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/mysql/main.tf",
+      "to": "infrastructure/terraform/modules/mysql/main.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/mysql/terraform.tf",
+      "to": "infrastructure/terraform/modules/mysql/terraform.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/networking/main.tf",
+      "to": "infrastructure/terraform/modules/networking/main.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/networking/terraform.tf",
+      "to": "infrastructure/terraform/modules/networking/terraform.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/security/main.tf",
+      "to": "infrastructure/terraform/modules/security/main.tf"
+    },
+    {
+      "from": "infrastructure/terraform/aws/modules/security/terraform.tf",
+      "to": "infrastructure/terraform/modules/security/terraform.tf"
+    }
+  ],
+  "removed_from_root_to_archive": [
+    "backend.spaces.hcl.example",
+    "backend.tf",
+    "main.tf",
+    "outputs.tf",
+    "providers.tf",
+    "README.md",
+    "terraform.tfvars.example",
+    "variables.tf",
+    "versions.tf"
+  ],
+  "archived_legacy_files": 9,
+  "relocated_historical_files": 16,
+  "all_archived_bytes_verified": true,
+  "resource_declarations_preserved": 69,
+  "tf_files": 21,
+  "modules": 8,
+  "unchanged_moved_files": 17,
+  "intentionally_edited_moved_files": [
+    "aws/main.tf",
+    "aws/provider.tf",
+    "aws/README.md",
+    "aws/variable.tf",
+    "aws/modules/networking/main.tf"
+  ],
+  "default_subnet_containment_and_non_overlap": "passed",
+  "terraform_execution": false,
+  "terraform_schema_validated": false,
+  "cloud_operations": false,
+  "checks_status": "passed",
+  "markdown_documents_checked": 13,
+  "broken_links": 0,
+  "workflow_yaml": "passed",
+  "disabled_container_release_jobs": "passed",
+  "negative_source_checks": [
+    "duplicate-directory",
+    "missing-account-guard",
+    "missing-required-module-input",
+    "opened-ai-gate"
+  ],
+  "module_labels_and_root_outputs_preserved": true,
+  "application_code_changed": false,
+  "git_head_preserved": true,
+  "security_scan": {
+    "files_scanned": 223,
+    "history_scanned": true,
+    "known_local_credential_checked": true,
+    "unresolved_findings": 0
+  }
+}

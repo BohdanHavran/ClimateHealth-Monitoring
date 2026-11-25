@@ -1,0 +1,131 @@
+# Review blueprint only. Not loaded by GitHub from this .example file.
+# Job is additionally disabled. Infrastructure is managed exclusively in HCP Terraform.
+name: ClimateHealth application release (draft)
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [dev, production]
+        required: true
+      component:
+        type: choice
+        options: [frontend, backend, ai]
+        required: true
+permissions:
+  contents: read
+jobs:
+  release:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Existing code and contract tests
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m unittest discover -s tests -v
+          npm --prefix frontend ci
+          npm --prefix frontend run lint
+          npm --prefix frontend run typecheck
+          npm --prefix frontend test
+          npm --prefix frontend run build
+      - name: Require successful application and secret workflows for this exact commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for WORKFLOW in application-ci.yml secret-check.yml; do
+            RESULT=$(gh run list --repo "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --workflow "$WORKFLOW" --limit 1 --json conclusion --jq '.[0].conclusion')
+            test "$RESULT" = success
+          done
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
+        with:
+          role-to-assume: ${{ vars.AWS_APPLICATION_RELEASE_ROLE_ARN }}
+          aws-region: us-east-1
+          role-duration-seconds: 1800
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+      - name: Frontend immutable assets before atomic index publication
+        if: inputs.component == 'frontend'
+        env:
+          BUCKET: ${{ vars.FRONTEND_BUCKET }}
+          DISTRIBUTION: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          aws s3 sync frontend/dist/assets/ "s3://$BUCKET/assets/" --cache-control 'public,max-age=31536000,immutable'
+          aws s3 sync frontend/dist/ "s3://$BUCKET/" --exclude 'assets/*' --exclude index.html --cache-control 'no-cache,max-age=0'
+          aws s3 cp frontend/dist/index.html "s3://$BUCKET/index.html" --cache-control 'no-store,max-age=0' --content-type text/html
+          INVALIDATION=$(aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" --paths / /index.html --query Invalidation.Id --output text)
+          aws cloudfront wait invalidation-completed --distribution-id "$DISTRIBUTION" --id "$INVALIDATION"
+      - name: Build and push immutable container
+        if: inputs.component != 'frontend'
+        env:
+          REGISTRY: ${{ vars.ECR_REGISTRY }}
+          BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY }}
+          AI_REPOSITORY: ${{ vars.AI_REPOSITORY }}
+          COMPONENT: ${{ inputs.component }}
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin "$REGISTRY"
+          if [ "$COMPONENT" = backend ]; then REPOSITORY="$BACKEND_REPOSITORY"; FILE=Dockerfile; else REPOSITORY="$AI_REPOSITORY"; FILE=infrastructure/docker/ml.Dockerfile; fi
+          TAG="$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          docker build -f "$FILE" -t "$REGISTRY/$REPOSITORY:$TAG" .
+          docker push "$REGISTRY/$REPOSITORY:$TAG"
+          aws ecr wait image-scan-complete --repository-name "$REPOSITORY" --image-id imageTag="$TAG"
+          aws ecr describe-image-scan-findings --repository-name "$REPOSITORY" --image-id imageTag="$TAG" > "$RUNNER_TEMP/scan.json"
+          jq -e 'has("imageScanFindings") and (((.imageScanFindings.findingSeverityCounts.CRITICAL // 0) + (.imageScanFindings.findingSeverityCounts.HIGH // 0)) == 0)' "$RUNNER_TEMP/scan.json" > /dev/null
+          DIGEST=$(aws ecr describe-images --repository-name "$REPOSITORY" --image-ids imageTag="$TAG" --query 'imageDetails[0].imageDigest' --output text)
+          printf 'RELEASE_IMAGE=%s/%s@%s\n' "$REGISTRY" "$REPOSITORY" "$DIGEST" >> "$GITHUB_ENV"
+      - name: Backend rollout after approved task-definition handoff
+        if: inputs.component == 'backend'
+        env:
+          CLUSTER: ${{ vars.ECS_CLUSTER }}
+          SERVICE: ${{ vars.ECS_SERVICE }}
+          BASE: ${{ vars.REVIEWED_TASK_DEFINITION_ARN }}
+          FAMILY: ${{ vars.ECS_TASK_FAMILY }}
+          ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+          TASK_ROLE: ${{ vars.ECS_TASK_ROLE_ARN }}
+          EXEC_ROLE: ${{ vars.ECS_EXECUTION_ROLE_ARN }}
+        run: |
+          PREVIOUS=$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --query 'services[0].taskDefinition' --output text)
+          aws ecs describe-task-definition --task-definition "$BASE" --query taskDefinition > "$RUNNER_TEMP/base.json"
+          python scripts/prepare_ecs_revision.py --input "$RUNNER_TEMP/base.json" --output "$RUNNER_TEMP/candidate.json" --image "$RELEASE_IMAGE" --family "$FAMILY" --account "$ACCOUNT" --task-role "$TASK_ROLE" --execution-role "$EXEC_ROLE"
+          NEW=$(aws ecs register-task-definition --cli-input-json "file://$RUNNER_TEMP/candidate.json" --query taskDefinition.taskDefinitionArn --output text)
+          aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --task-definition "$NEW" > /dev/null
+          if ! aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"; then
+            aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --task-definition "$PREVIOUS" > /dev/null
+            exit 1
+          fi
+          ACTUAL=$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --query 'services[0].taskDefinition' --output text)
+          if [ "$ACTUAL" != "$NEW" ]; then
+            aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --task-definition "$PREVIOUS" > /dev/null
+            exit 1
+          fi
+      - name: AI signed artifact publication (private reconciliation is an AMI contract)
+        if: inputs.component == 'ai'
+        env:
+          ARTIFACT_BUCKET: ${{ vars.ARTIFACT_BUCKET }}
+          SIGNING_KEY: ${{ secrets.AI_RELEASE_SIGNING_KEY_PEM }}
+        run: |
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/signing.pem"' EXIT
+          printf '%s' "$SIGNING_KEY" > "$RUNNER_TEMP/signing.pem"
+          docker save "$RELEASE_IMAGE" -o "$RUNNER_TEMP/ai-image.tar"
+          ARCHIVE_HASH=$(sha256sum "$RUNNER_TEMP/ai-image.tar" | cut -d' ' -f1)
+          IMAGE_ID=$(docker image inspect "$RELEASE_IMAGE" --format '{{.Id}}')
+          jq -n --arg image "$RELEASE_IMAGE" --arg image_id "$IMAGE_ID" --arg hash "$ARCHIVE_HASH" --arg commit "$GITHUB_SHA" '{schema_version:1,image:$image,image_id:$image_id,archive_sha256:$hash,commit:$commit,model_status:"unavailable"}' > "$RUNNER_TEMP/manifest.json"
+          openssl pkeyutl -sign -rawin -inkey "$RUNNER_TEMP/signing.pem" -in "$RUNNER_TEMP/manifest.json" -out "$RUNNER_TEMP/manifest.sig"
+          PREFIX="s3://$ARTIFACT_BUCKET/ai/$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          aws s3 cp "$RUNNER_TEMP/ai-image.tar" "$PREFIX/image.tar"
+          aws s3 cp "$RUNNER_TEMP/manifest.sig" "$PREFIX/manifest.sig"
+          aws s3 cp "$RUNNER_TEMP/manifest.json" "$PREFIX/manifest.json"
+          # No automatic activation pointer: approved AMI signature/schema/version checks required first.

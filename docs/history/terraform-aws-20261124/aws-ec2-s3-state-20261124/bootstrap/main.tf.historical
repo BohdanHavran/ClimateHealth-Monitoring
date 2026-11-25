@@ -1,0 +1,87 @@
+terraform {
+  required_version = ">= 1.11.0, < 2.0.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "= 6.74.0"
+    }
+  }
+}
+
+# Approved bootstrap only. Initial local state must be protected and backed up.
+provider "aws" {
+  region              = "us-east-1"
+  allowed_account_ids = [var.account_id]
+  default_tags {
+    tags = { Project = "ClimateHealth", ManagedBy = "Terraform", Purpose = "State" }
+  }
+}
+variable "account_id" {
+  type = string
+  validation {
+    condition     = can(regex("^[0-9]{12}$", var.account_id))
+    error_message = "Approved 12-digit account ID required."
+  }
+}
+variable "bucket_name" {
+  type        = string
+  description = "Approved globally unique private state bucket name."
+}
+variable "bootstrap_approved" {
+  type    = bool
+  default = false
+}
+resource "aws_s3_bucket" "state" {
+  bucket        = var.bucket_name
+  force_destroy = false
+  lifecycle {
+    prevent_destroy = true
+    precondition {
+      condition     = var.bootstrap_approved
+      error_message = "State bootstrap requires separate explicit approval."
+    }
+  }
+}
+resource "aws_s3_bucket_public_access_block" "state" {
+  bucket                  = aws_s3_bucket.state.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+resource "aws_s3_bucket_versioning" "state" {
+  bucket = aws_s3_bucket.state.id
+  versioning_configuration { status = "Enabled" }
+}
+resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
+  bucket = aws_s3_bucket.state.id
+  rule {
+    apply_server_side_encryption_by_default { sse_algorithm = "AES256" }
+  }
+}
+resource "aws_s3_bucket_ownership_controls" "state" {
+  bucket = aws_s3_bucket.state.id
+  rule { object_ownership = "BucketOwnerEnforced" }
+}
+data "aws_iam_policy_document" "state_transport" {
+  statement {
+    sid       = "DenyInsecureTransport"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [aws_s3_bucket.state.arn, "${aws_s3_bucket.state.arn}/*"]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+resource "aws_s3_bucket_policy" "state" {
+  bucket = aws_s3_bucket.state.id
+  policy = data.aws_iam_policy_document.state_transport.json
+}
+output "state_bucket" { value = aws_s3_bucket.state.id }

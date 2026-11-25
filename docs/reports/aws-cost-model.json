@@ -1,0 +1,104 @@
+{
+  "date": "2026-11-24",
+  "region": "us-east-1",
+  "currency": "USD",
+  "hours_per_month": 730,
+  "credits_confirmed": 100,
+  "taxes_included": false,
+  "free_tier_or_extra_credits_assumed": false,
+  "prices": {
+    "ec2_t3_medium_per_h": 0.0416,
+    "ec2_t3_small_per_h": 0.0208,
+    "ebs_gp3_per_gb_month": 0.08,
+    "public_ipv4_per_h": 0.005,
+    "rds_t4g_micro_per_h": 0.016,
+    "rds_gp3_per_gb_month": 0.115,
+    "s3_standard_per_gb_month": 0.023,
+    "s3_put_per_1000": 0.005,
+    "s3_get_per_1000": 0.0004,
+    "ecr_per_gb_month": 0.1,
+    "egress_per_gb": 0.09,
+    "cloudwatch_ingest_per_gb": 0.5,
+    "cloudwatch_archive_per_gb_month": 0.03,
+    "cloudwatch_standard_alarm_per_month": 0.1,
+    "snapshot_per_gb_month": 0.05
+  },
+  "scenarios": {
+    "A_one_EC2": {
+      "items": {
+        "EC2": 30.368,
+        "EBS gp3": 3.2,
+        "Public IPv4": 3.65,
+        "RDS instance": 0.0,
+        "RDS gp3 20 GB": 0.0,
+        "S3 storage and requests": 0.124,
+        "ECR 2 GB": 0.2,
+        "Internet egress reserve 10 GB": 0.9,
+        "CloudWatch 1 GB ingest + 1 GB archive + 3 alarms": 0.83,
+        "EBS snapshots 10 GB": 0.5,
+        "NAT": 0,
+        "Interface endpoints": 0
+      },
+      "monthly_usd": 39.77,
+      "with_20_percent_reserve_usd": 47.73,
+      "months_for_100_credit_with_reserve": 2.1
+    },
+    "B_two_EC2_mysql_on_app": {
+      "items": {
+        "EC2": 45.552,
+        "EBS gp3": 4.8,
+        "Public IPv4": 3.65,
+        "RDS instance": 0.0,
+        "RDS gp3 20 GB": 0.0,
+        "S3 storage and requests": 0.124,
+        "ECR 2 GB": 0.2,
+        "Internet egress reserve 10 GB": 0.9,
+        "CloudWatch 1 GB ingest + 1 GB archive + 3 alarms": 0.83,
+        "EBS snapshots 10 GB": 0.5,
+        "NAT": 0,
+        "Interface endpoints": 0
+      },
+      "monthly_usd": 56.56,
+      "with_20_percent_reserve_usd": 67.87,
+      "months_for_100_credit_with_reserve": 1.47
+    },
+    "C_two_EC2_RDS": {
+      "items": {
+        "EC2": 30.368,
+        "EBS gp3": 3.2,
+        "Public IPv4": 3.65,
+        "RDS instance": 11.68,
+        "RDS gp3 20 GB": 2.3,
+        "S3 storage and requests": 0.124,
+        "ECR 2 GB": 0.2,
+        "Internet egress reserve 10 GB": 0.9,
+        "CloudWatch 1 GB ingest + 1 GB archive + 3 alarms": 0.83,
+        "EBS snapshots 10 GB": 0.5,
+        "NAT": 0,
+        "Interface endpoints": 0
+      },
+      "monthly_usd": 53.75,
+      "with_20_percent_reserve_usd": 64.5,
+      "months_for_100_credit_with_reserve": 1.55
+    },
+    "A_demo_80_hours": {
+      "items": {
+        "EC2": 3.328,
+        "EBS gp3": 3.2,
+        "Public IPv4": 0.4,
+        "RDS instance": 0.0,
+        "RDS gp3 20 GB": 0.0,
+        "S3 storage and requests": 0.124,
+        "ECR 2 GB": 0.2,
+        "Internet egress reserve 10 GB": 0.9,
+        "CloudWatch 1 GB ingest + 1 GB archive + 3 alarms": 0.83,
+        "EBS snapshots 10 GB": 0.5,
+        "NAT": 0,
+        "Interface endpoints": 0
+      },
+      "monthly_usd": 9.48,
+      "with_20_percent_reserve_usd": 11.38,
+      "months_for_100_credit_with_reserve": 8.79
+    }
+  }
+}

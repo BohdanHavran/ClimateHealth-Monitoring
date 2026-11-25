@@ -1,0 +1,38 @@
+{
+  "README.md": {
+    "sha256": "4522d6bd6bfc2d40be88b74119dbb02dedd8b54bd9b99af76bf5eabe01e44d53", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "bootstrap\\main.tf": {
+    "sha256": "95a8708fba54612bebb335a6c4ccfce45df18e6cb659684b929d796eaf56dc8d", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "environments\\dev\\backend.s3.hcl.example": {
+    "sha256": "5a0f4bdb8e84f20046c9e6623b4fa78ee00d521a0c03f36c79b921d9cdd8ea6b", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "environments\\dev\\backend.tf": {
+    "sha256": "70dc5a9eaa853383c1222f3c92377d0357b7b9b47bae0be31df6d4e52d570ccb", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "environments\\dev\\main.tf": {
+    "sha256": "6e2af395a11a14a2d9d4a575467a428e94ba53b0267fd8968b77459a9cce9cf7", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "environments\\dev\\versions.tf": {
+    "sha256": "57d30da6e0cfe49279ea189bf28c0032ff78cea915e3f09b087dc635dc7e7b8c", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "environments\\production\\backend.s3.hcl.example": {
+    "sha256": "ae90bf2fac110ceae6a369c78a74a5cc3a1157eeafec74c9aa5ef2c606509d90", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "environments\\production\\backend.tf": {
+    "sha256": "70dc5a9eaa853383c1222f3c92377d0357b7b9b47bae0be31df6d4e52d570ccb", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "environments\\production\\main.tf": {
+    "sha256": "4aff9a8e794b30addecf5b9d5b35bc3638137263c1b9863e38dd6e0cc3afadf4", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "environments\\production\\versions.tf": {
+    "sha256": "57d30da6e0cfe49279ea189bf28c0032ff78cea915e3f09b087dc635dc7e7b8c", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "modules\\networking\\main.tf": {
+    "sha256": "d5d48936cea357f660a2ba28e10aca9fdd9026d612151437a992d3800bb09dbf", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  },
+  "modules\\security\\main.tf": {
+    "sha256": "ff73f4f362d8100728256e62378ed27177ef9f7d1915360c5d2a6d212653a03e", "review": "Verified archive integrity checksum; # pragma: allowlist secret"
+  }
+}

@@ -1,0 +1,6 @@
+# Examples only; no credentials. Native S3 locking requires Terraform >= 1.10.
+bucket       = "REPLACE-WITH-APPROVED-UNIQUE-STATE-BUCKET"
+key          = "climatehealth/production/terraform.tfstate"
+region       = "us-east-1"
+encrypt      = true
+use_lockfile = true

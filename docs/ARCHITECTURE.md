@@ -151,35 +151,17 @@ flowchart LR
 
 GRU/LSTM додаються за достатньої історії. Синтетичні fixtures перевіряють тільки програмний контракт. Реальних медичних даних і точності немає.
 
-## 7. DigitalOcean — спроєктовано
+## 7. AWS — цільове хмарне рішення
 
-```mermaid
-flowchart LR
-  Internet -->|443| App[Application Droplet: proxy, SPA, Flask]
-  subgraph VPC
-    App -->|TLS + auth| ML[ML CPU Droplet]
-    App --> DB[(MySQL)]
-  end
-  Backup[Приватні backup / моделі] --> DB
-  Admin[Адміністратор: trusted SSH CIDR] --> App
-  Admin --> ML
-```
+Оновлено 24.11.2026: AWS — єдина цільова платформа. Application EC2 з HTTPS reverse proxy/React/Flask; приватний CPU AI EC2 з FastAPI/PyTorch; MySQL на EC2 або приватний RDS for MySQL. Початкова бюджетна демонстрація може об'єднати сервіси на одному EC2, без публічних ML/DB портів. Наявну локальну MySQL не змінюємо.
 
-Terraform-каркас описує лише VPC, два Droplets і firewalls. Сервіси, TLS, auth, MySQL, registry та backup-процедури не вважаються налаштованими ресурсами. Кошторис і стан перевірок — INFRASTRUCTURE.md.
+Актуальна рекомендація: ECS EC2 t3.small/bridge/ASG, CloudFront+private S3/OAC, ALB на demo window, RDS MySQL8.4, AIoff; [ADR0005](adr/0005-ecs-cloudfront-hcp-terraform.md). Повна [AWS-схема та приватний доступ без NAT](AWS_ARCHITECTURE.md), [три кошториси](AWS_COST_ESTIMATE.md), [ADR 0004](adr/0004-aws-infrastructure-and-credit-budget.md). Хмарні компоненти — проєктні, не реалізовані AWS-ресурси. Історичний Terraform root не використовується у цільовому deployment.
 
 ## 8. CI/CD
 
-```mermaid
-flowchart LR
-  Dev[Зміна] --> PR[Pull Request]
-  PR --> CI[Lint / unit / MySQL CI / API]
-  CI --> Security[Dependency / secret / image checks]
-  Security --> Image[Образ за commit SHA]
-  Image --> Review[Окреме рішення про публікацію й deployment]
-  Review --> Deploy[DigitalOcean + health + rollback]
-```
+Програмний CI успішно працював для опублікованого 43b3ba1. Локальний UI-редизайн 4b3033b ще не відправлено. Майбутня доставка — GitHub OIDC → ECR/S3 release manifest → захищене environment → контрольоване оновлення EC2, health і rollback. State/plan/manual apply — HCP Terraform, один root і дві ізольовані workspaces, Auto Apply=false. Докладно: [CI/CD](CI_CD_PIPELINE.md), [Terraform](TERRAFORM_GUIDE.md).
 
-CI-файли створено, але віддалених запусків немає: локальний Git/remote поки не налаштовані. Публікації, SSH deployment, Terraform plan/apply і production gate ще потребують налаштування й дозволу. Докладно — CI_CD_PIPELINE.md.
+Docker/Terraform jobs залишаються вимкненими. Немає створених cloud resources, автоматичного deployment, дозволу на push чи навчання моделі. Схеми вище збережені як програмний контекст; поточні cloud-рішення визначають цей розділ та ADR 0004.
 
 ## Цільова структура після перевірених етапів
 

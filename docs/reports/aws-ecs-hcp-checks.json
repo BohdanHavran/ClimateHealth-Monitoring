@@ -1,0 +1,28 @@
+{
+  "workflow_yaml": "passed",
+  "release_disabled_container_disabled": "passed",
+  "trust_json": "passed",
+  "unchanged_external_tf_files": 96,
+  "prior_scaffold_preserved_files": 12,
+  "application_design_HRI_unchanged": "passed",
+  "python_tests": {
+    "total": 63,
+    "passed": 60,
+    "skipped_ci_mysql_write_tests": 3
+  },
+  "terraform_docker_hcp_cloud_execution": false,
+  "terraform_schema_or_plan_validated": false,
+  "current_document_links": "passed",
+  "archive_checksum_records_verified": 12,
+  "source_checks": {
+    "tf_lexical_files": 21,
+    "module_contracts": 8,
+    "cost_rows": 4800
+  },
+  "security_scan": {
+    "passed": true,
+    "scope": "Git candidates and history; exact local credential check",
+    "unresolved_findings": 0,
+    "checksum_allowlists": "Only documented public commit and verified SHA256 metadata values"
+  }
+}

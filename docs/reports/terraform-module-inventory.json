@@ -1,0 +1,1201 @@
+{
+  "alb": {
+    "files": [
+      "alb/data.tf",
+      "alb/main.tf",
+      "alb/out.tf",
+      "alb/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_alb_target_group",
+        "ecs"
+      ],
+      [
+        "aws_lb",
+        "application"
+      ],
+      [
+        "aws_alb_listener",
+        "https"
+      ],
+      [
+        "aws_lb_listener_rule",
+        "ecs"
+      ],
+      [
+        "aws_lb_listener",
+        "http"
+      ],
+      [
+        "aws_lb_listener_rule",
+        "one_ip_to_http"
+      ],
+      [
+        "aws_s3_bucket",
+        "alb_logs"
+      ],
+      [
+        "aws_s3_bucket_policy",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "vpc_id",
+      "target_groups_config",
+      "load_balancer",
+      "alb_certificate_arn",
+      "project",
+      "s3_bucket_name"
+    ],
+    "outputs": [
+      "tg_arns",
+      "alb_domain",
+      "alb_id"
+    ],
+    "terraform_constraints": []
+  },
+  "api_gateway": {
+    "files": [
+      "api_gateway/main.tf",
+      "api_gateway/provider.tf",
+      "api_gateway/variables.tf"
+    ],
+    "resources": [
+      [
+        "aws_apigatewayv2_api",
+        "this"
+      ],
+      [
+        "aws_apigatewayv2_stage",
+        "this"
+      ],
+      [
+        "aws_apigatewayv2_integration",
+        "this"
+      ],
+      [
+        "aws_apigatewayv2_route",
+        "this"
+      ],
+      [
+        "aws_lambda_permission",
+        "this"
+      ],
+      [
+        "aws_apigatewayv2_domain_name",
+        "this"
+      ],
+      [
+        "aws_apigatewayv2_api_mapping",
+        "this"
+      ],
+      [
+        "aws_route53_record",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "apigateway_name",
+      "stage_name",
+      "description",
+      "protocol_type",
+      "Custom_domain",
+      "integrations"
+    ],
+    "outputs": [],
+    "terraform_constraints": [
+      ">= 1.3"
+    ]
+  },
+  "cdn": {
+    "files": [
+      "cdn/data.tf",
+      "cdn/main.tf",
+      "cdn/out.tf",
+      "cdn/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_cloudfront_distribution",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "alb_domain",
+      "aliases",
+      "path_pattern",
+      "default_cache_behavior",
+      "ordered_cache_behavior"
+    ],
+    "outputs": [],
+    "terraform_constraints": []
+  },
+  "cdn-imgproxy": {
+    "files": [
+      "cdn-imgproxy/data.tf",
+      "cdn-imgproxy/main.tf",
+      "cdn-imgproxy/outputs.tf",
+      "cdn-imgproxy/variables.tf"
+    ],
+    "resources": [
+      [
+        "aws_cloudfront_distribution",
+        "cdn"
+      ]
+    ],
+    "inputs": [
+      "img_proxy_fqdn",
+      "img_proxy_dns"
+    ],
+    "outputs": [],
+    "terraform_constraints": []
+  },
+  "cdn_s3": {
+    "files": [
+      "cdn_s3/data.tf",
+      "cdn_s3/main.tf",
+      "cdn_s3/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_cloudfront_distribution",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "s3_origin",
+      "aliases",
+      "default_cache_behavior",
+      "acm_certificate_arn"
+    ],
+    "outputs": [],
+    "terraform_constraints": []
+  },
+  "cloudfront": {
+    "files": [
+      "cloudfront/main.tf",
+      "cloudfront/out.tf",
+      "cloudfront/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_cloudfront_distribution",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "project",
+      "alb_dns",
+      "certificate_arn",
+      "domain_name",
+      "waf_arn"
+    ],
+    "outputs": [],
+    "terraform_constraints": []
+  },
+  "cognito": {
+    "files": [
+      "cognito/data.tf",
+      "cognito/main.tf",
+      "cognito/out.tf",
+      "cognito/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_cognito_user_pool",
+        "this"
+      ],
+      [
+        "aws_cognito_user_pool_domain",
+        "this"
+      ],
+      [
+        "aws_cognito_user_pool_client",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "project",
+      "cognito",
+      "callback_urls"
+    ],
+    "outputs": [
+      "client_id",
+      "cognito_domain",
+      "pool_arn"
+    ],
+    "terraform_constraints": []
+  },
+  "cw_alarms": {
+    "files": [
+      "cw_alarms/main.tf",
+      "cw_alarms/out.tf",
+      "cw_alarms/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_cloudwatch_metric_alarm",
+        "this"
+      ],
+      [
+        "aws_sns_topic",
+        "cloudwatch_common_alarm"
+      ],
+      [
+        "aws_sns_topic",
+        "cloudwatch_usage_alarm"
+      ]
+    ],
+    "inputs": [
+      "alarms"
+    ],
+    "outputs": [
+      "cloudwatch_alarm_arn",
+      "common_sns_topic_arn",
+      "usage_sns_topic_arns"
+    ],
+    "terraform_constraints": []
+  },
+  "ec2": {
+    "files": [
+      "ec2/main.tf",
+      "ec2/provider.tf",
+      "ec2/variables.tf"
+    ],
+    "resources": [
+      [
+        "aws_instance",
+        "this"
+      ],
+      [
+        "aws_key_pair",
+        "this"
+      ],
+      [
+        "aws_security_group",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "instance_type",
+      "name",
+      "key_name",
+      "public_key",
+      "user_data",
+      "ami_id",
+      "iam_instance_profile",
+      "image",
+      "volume_size",
+      "vpc_security_group_ids",
+      "security_group_rules",
+      "subnet_id",
+      "vpc_id",
+      "tags"
+    ],
+    "outputs": [],
+    "terraform_constraints": [
+      ">= 1.3.2"
+    ]
+  },
+  "ecr": {
+    "files": [
+      "ecr/main.tf",
+      "ecr/out.tf",
+      "ecr/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_kms_key",
+        "for_ecr"
+      ],
+      [
+        "aws_ecr_repository",
+        "ecr"
+      ],
+      [
+        "aws_ecr_lifecycle_policy",
+        "images"
+      ]
+    ],
+    "inputs": [
+      "ecr_names",
+      "kms_key_arn",
+      "project"
+    ],
+    "outputs": [
+      "ecr_arns"
+    ],
+    "terraform_constraints": []
+  },
+  "ecs": {
+    "files": [
+      "ecs/data.tf",
+      "ecs/main.tf",
+      "ecs/out.tf",
+      "ecs/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_ecs_cluster",
+        "this"
+      ],
+      [
+        "aws_cloudwatch_log_group",
+        "this"
+      ],
+      [
+        "aws_ecs_cluster_capacity_providers",
+        "fargate"
+      ],
+      [
+        "aws_ecs_service",
+        "app_fargate"
+      ],
+      [
+        "aws_ecs_service",
+        "app_ec2"
+      ],
+      [
+        "aws_launch_template",
+        "ecs_ec2"
+      ],
+      [
+        "aws_security_group",
+        "ecs_sg_ec2"
+      ],
+      [
+        "aws_autoscaling_group",
+        "ecs_asg"
+      ],
+      [
+        "aws_ecs_capacity_provider",
+        "ecs-ec2"
+      ],
+      [
+        "aws_ecs_cluster_capacity_providers",
+        "ecs-ec2"
+      ],
+      [
+        "aws_iam_role",
+        "ecs_cluster_role_ec2"
+      ],
+      [
+        "aws_iam_role_policy_attachment",
+        "ecs_cluster_role_policy"
+      ],
+      [
+        "aws_iam_instance_profile",
+        "ecs_cluster"
+      ]
+    ],
+    "inputs": [
+      "project",
+      "env",
+      "security_groups",
+      "cluster_subnet",
+      "use_fargate",
+      "cluster_name",
+      "cloudwatch",
+      "launch_configuration",
+      "autoscaling_group",
+      "fargate_strategy",
+      "fargate_spot_strategy",
+      "target_group_arn",
+      "ecs_service"
+    ],
+    "outputs": [
+      "ecs_service_id"
+    ],
+    "terraform_constraints": []
+  },
+  "elasticache": {
+    "files": [
+      "elasticache/data.tf",
+      "elasticache/main.tf",
+      "elasticache/out.tf",
+      "elasticache/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_elasticache_cluster",
+        "redis"
+      ],
+      [
+        "aws_cloudwatch_log_group",
+        "redis_slow_log"
+      ]
+    ],
+    "inputs": [
+      "project",
+      "cloudwatch_log_group_name",
+      "log_retention",
+      "enable_redis",
+      "elc_mutable",
+      "engine_version",
+      "elc_immutable"
+    ],
+    "outputs": [
+      "elc_link"
+    ],
+    "terraform_constraints": []
+  },
+  "event_bridge": {
+    "files": [
+      "event_bridge/main.tf",
+      "event_bridge/output.tf",
+      "event_bridge/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_cloudwatch_event_rule",
+        "ecs-rule"
+      ],
+      [
+        "aws_cloudwatch_event_target",
+        "ecs-target"
+      ]
+    ],
+    "inputs": [
+      "topic_ecs_arn"
+    ],
+    "outputs": [],
+    "terraform_constraints": []
+  },
+  "ga": {
+    "files": [
+      "ga/main.tf",
+      "ga/out.tf",
+      "ga/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_globalaccelerator_accelerator",
+        "main"
+      ],
+      [
+        "aws_globalaccelerator_endpoint_group",
+        "ga_group"
+      ],
+      [
+        "aws_globalaccelerator_endpoint_group",
+        "ga_group_eu"
+      ],
+      [
+        "aws_globalaccelerator_listener",
+        "ga_listener"
+      ]
+    ],
+    "inputs": [
+      "s3_bucket_name",
+      "project",
+      "alb_arn"
+    ],
+    "outputs": [],
+    "terraform_constraints": []
+  },
+  "iam": {
+    "files": [
+      "iam/data.tf",
+      "iam/main.tf",
+      "iam/out.tf",
+      "iam/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_iam_role",
+        "task"
+      ],
+      [
+        "aws_iam_policy",
+        "task"
+      ],
+      [
+        "aws_iam_role_policy_attachment",
+        "task"
+      ],
+      [
+        "aws_iam_role_policy_attachment",
+        "instance_profile"
+      ],
+      [
+        "aws_iam_role_policy_attachment",
+        "gitlabrole"
+      ],
+      [
+        "aws_iam_policy",
+        "instanceprofile"
+      ],
+      [
+        "aws_iam_policy",
+        "gitlabrunner"
+      ],
+      [
+        "aws_iam_role",
+        "instance_profile"
+      ],
+      [
+        "aws_iam_role",
+        "gitlabrunner"
+      ],
+      [
+        "aws_iam_role",
+        "ecs"
+      ],
+      [
+        "aws_iam_instance_profile",
+        "ecs"
+      ],
+      [
+        "aws_iam_instance_profile",
+        "gitlab_runner"
+      ],
+      [
+        "aws_iam_role_policy_attachment",
+        "ecs"
+      ],
+      [
+        "aws_iam_role",
+        "ecs_task_execution_role"
+      ],
+      [
+        "aws_iam_role_policy_attachment",
+        "ecs_task"
+      ],
+      [
+        "aws_iam_role",
+        "vpc_flow_logs"
+      ],
+      [
+        "aws_iam_policy",
+        "vpc_flow_logs"
+      ],
+      [
+        "aws_iam_role_policy_attachment",
+        "vpc_flow_logs"
+      ]
+    ],
+    "inputs": [
+      "policy_ecs",
+      "project",
+      "ecr_arns",
+      "bucket_arns",
+      "gitlab_arns",
+      "cache_backet_arn"
+    ],
+    "outputs": [
+      "role_for_app",
+      "role_for_ecs",
+      "role_for_cluster",
+      "role_ws_task",
+      "flow_log_role"
+    ],
+    "terraform_constraints": []
+  },
+  "iam_roles": {
+    "files": [
+      "iam_roles/main.tf",
+      "iam_roles/output.tf",
+      "iam_roles/variable.tf"
+    ],
+    "resources": [
+      [
+        "aws_iam_role",
+        "this"
+      ],
+      [
+        "aws_iam_policy",
+        "this"
+      ],
+      [
+        "aws_iam_role_policy_attachment",
+        "this"
+      ],
+      [
+        "aws_iam_instance_profile",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "roles"
+    ],
+    "outputs": [
+      "roles",
+      "custom_policies",
+      "instance_profiles"
+    ],
+    "terraform_constraints": []
+  },
+  "imgproxy": {
+    "files": [
+      "imgproxy/data.tf",
+      "imgproxy/main.tf",
+      "imgproxy/output.tf",
+      "imgproxy/variable.tf"
+    ],
+    "resources": [
+      [
+        "aws_lambda_function",
+        "this"
+      ],
+      [
+        "aws_lambda_function_url",
+        "this"
+      ],
+      [
+        "aws_lambda_permission",
+        "this"
+      ],
+      [
+        "aws_cloudfront_origin_access_control",
+        "this"
+      ],
+      [
+        "aws_cloudfront_distribution",
+        "this"
+      ],
+      [
+        "aws_cloudwatch_log_group",
+        "this"
+      ],
+      [
+        "aws_iam_role",
+        "this"
+      ],
+      [
+        "aws_iam_role_policy",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "function_name",
+      "image_uri",
+      "architecture",
+      "memory_size",
+      "timeout",
+      "environment_ssm_path",
+      "variables",
+      "acm_certificate_arn",
+      "cloudfront_aliases"
+    ],
+    "outputs": [],
+    "terraform_constraints": []
+  },
+  "lambda": {
+    "files": [
+      "lambda/main.tf",
+      "lambda/outputs.tf",
+      "lambda/provider.tf",
+      "lambda/variables.tf"
+    ],
+    "resources": [
+      [
+        "aws_iam_role",
+        "this"
+      ],
+      [
+        "aws_iam_role_policy_attachment",
+        "this"
+      ],
+      [
+        "aws_lambda_function",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "runtime",
+      "filename",
+      "function_name",
+      "handler",
+      "architectures",
+      "memory_size",
+      "timeout"
+    ],
+    "outputs": [
+      "lambda_arn",
+      "lambda_name"
+    ],
+    "terraform_constraints": [
+      ">= 1.3"
+    ]
+  },
+  "pagerduty": {
+    "files": [
+      "pagerduty/main.tf",
+      "pagerduty/outputs.tf",
+      "pagerduty/variables.tf"
+    ],
+    "resources": [
+      [
+        "pagerduty_service",
+        "this"
+      ],
+      [
+        "pagerduty_service_integration",
+        "prometheus"
+      ],
+      [
+        "pagerduty_service_event_rule",
+        "start_session"
+      ]
+    ],
+    "inputs": [
+      "project",
+      "slack_channel_id",
+      "slack_workspace_id",
+      "list_of_integration"
+    ],
+    "outputs": [
+      "pagerduty_vendor",
+      "pagerduty_integrations_ids",
+      "pagerduty_integrations_integration_keys",
+      "pagerduty_integrations_html_urls",
+      "pagerduty_integration_email"
+    ],
+    "terraform_constraints": []
+  },
+  "rds": {
+    "files": [
+      "rds/data.tf",
+      "rds/main.tf",
+      "rds/out.tf",
+      "rds/vars.tf"
+    ],
+    "resources": [
+      [
+        "random_string",
+        "user"
+      ],
+      [
+        "random_password",
+        "password"
+      ],
+      [
+        "aws_db_instance",
+        "postgres"
+      ],
+      [
+        "aws_kms_key",
+        "rds_key"
+      ]
+    ],
+    "inputs": [
+      "project",
+      "rds_mutable",
+      "rds_immutable"
+    ],
+    "outputs": [
+      "rds_port",
+      "rds_user",
+      "rds_link",
+      "db_id",
+      "rds_password"
+    ],
+    "terraform_constraints": []
+  },
+  "s3": {
+    "files": [
+      "s3/data.tf",
+      "s3/main.tf",
+      "s3/out.tf",
+      "s3/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_s3_bucket",
+        "this"
+      ],
+      [
+        "aws_s3_bucket_public_access_block",
+        "this"
+      ],
+      [
+        "aws_s3_bucket_policy",
+        "this"
+      ],
+      [
+        "aws_s3_bucket_cors_configuration",
+        "rule"
+      ],
+      [
+        "aws_s3_bucket_versioning",
+        "this"
+      ],
+      [
+        "aws_s3_bucket_ownership_controls",
+        "s3_bucket_acl_ownership"
+      ]
+    ],
+    "inputs": [
+      "s3_bucket_name",
+      "versioning",
+      "bucket_policy",
+      "cors_rule",
+      "bucket_public_access"
+    ],
+    "outputs": [
+      "bucket_arn"
+    ],
+    "terraform_constraints": []
+  },
+  "security_groups": {
+    "files": [
+      "security_groups/main.tf",
+      "security_groups/out.tf",
+      "security_groups/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_security_group",
+        "rds"
+      ],
+      [
+        "aws_security_group",
+        "elasticache"
+      ],
+      [
+        "aws_security_group",
+        "ecs"
+      ],
+      [
+        "aws_security_group",
+        "alb"
+      ],
+      [
+        "aws_security_group",
+        "bastion"
+      ],
+      [
+        "aws_security_group_rule",
+        "ecs_cidr"
+      ],
+      [
+        "aws_security_group_rule",
+        "alb_cidr"
+      ],
+      [
+        "aws_security_group_rule",
+        "bastion_cidr"
+      ]
+    ],
+    "inputs": [
+      "vpc_id",
+      "project",
+      "rds_sg_name",
+      "elasticache_sg_name",
+      "ecs_sg_name",
+      "alb_sg_name",
+      "cidr_to_anywhere",
+      "cidr_only_vpc",
+      "ecs_cidr_rules",
+      "alb_cidr_rules",
+      "bastion_cidr_rules",
+      "bastion_create"
+    ],
+    "outputs": [
+      "elc_sg",
+      "rds_sg",
+      "cluster_sg",
+      "alb_sg",
+      "bastion_rule"
+    ],
+    "terraform_constraints": []
+  },
+  "service_discovery": {
+    "files": [
+      "service_discovery/main.tf",
+      "service_discovery/out.tf",
+      "service_discovery/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_service_discovery_private_dns_namespace",
+        "this"
+      ],
+      [
+        "aws_service_discovery_service",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "project",
+      "discovery_namespace",
+      "discovery_service"
+    ],
+    "outputs": [
+      "discovery_service_arn"
+    ],
+    "terraform_constraints": []
+  },
+  "slack": {
+    "files": [
+      "slack/main.tf",
+      "slack/outputs.tf",
+      "slack/variables.tf"
+    ],
+    "resources": [
+      [
+        "slack_conversation",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "project"
+    ],
+    "outputs": [
+      "slack_channel_id"
+    ],
+    "terraform_constraints": [
+      ">= 0.13"
+    ]
+  },
+  "sns": {
+    "files": [
+      "sns/main.tf",
+      "sns/output.tf",
+      "sns/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_sns_topic",
+        "topic"
+      ],
+      [
+        "aws_sns_topic",
+        "ecs-topic"
+      ],
+      [
+        "aws_sns_topic",
+        "topic-rds"
+      ],
+      [
+        "aws_kms_key",
+        "sns-key"
+      ]
+    ],
+    "inputs": [
+      "topic_rds_events",
+      "topic_main",
+      "project",
+      "topic_ecs"
+    ],
+    "outputs": [
+      "topic_main_arn",
+      "topic_rds_arn",
+      "topic_ecs_arn"
+    ],
+    "terraform_constraints": []
+  },
+  "vpc": {
+    "files": [
+      "vpc/data.tf",
+      "vpc/main.tf",
+      "vpc/out.tf",
+      "vpc/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_vpc",
+        "main"
+      ],
+      [
+        "aws_eip",
+        "this"
+      ],
+      [
+        "aws_instance",
+        "nat"
+      ],
+      [
+        "aws_security_group",
+        "nat"
+      ],
+      [
+        "aws_internet_gateway",
+        "this"
+      ],
+      [
+        "aws_nat_gateway",
+        "this"
+      ],
+      [
+        "aws_subnet",
+        "public_1"
+      ],
+      [
+        "aws_subnet",
+        "public_2"
+      ],
+      [
+        "aws_subnet",
+        "public_3"
+      ],
+      [
+        "aws_subnet",
+        "private_1"
+      ],
+      [
+        "aws_subnet",
+        "private_2"
+      ],
+      [
+        "aws_subnet",
+        "private_3"
+      ],
+      [
+        "aws_db_subnet_group",
+        "rds"
+      ],
+      [
+        "aws_elasticache_subnet_group",
+        "this"
+      ],
+      [
+        "aws_route_table",
+        "public"
+      ],
+      [
+        "aws_route_table",
+        "private"
+      ],
+      [
+        "aws_route_table_association",
+        "public_1"
+      ],
+      [
+        "aws_route_table_association",
+        "public_2"
+      ],
+      [
+        "aws_route_table_association",
+        "public_3"
+      ],
+      [
+        "aws_route_table_association",
+        "private_1"
+      ],
+      [
+        "aws_route_table_association",
+        "private_2"
+      ],
+      [
+        "aws_route_table_association",
+        "private_3"
+      ]
+    ],
+    "inputs": [
+      "project",
+      "rds_subnet_group_name",
+      "elc_subnet_group_name",
+      "enable_dns_support",
+      "enable_dns_hostnames",
+      "cidr_to_anywhere",
+      "vpc_name",
+      "nat_type",
+      "instance_type",
+      "key_name",
+      "enable_nat_schedule"
+    ],
+    "outputs": [
+      "vpc_id",
+      "elc_group",
+      "rds_group",
+      "private_sub_1",
+      "private_sub_2",
+      "private_sub_3",
+      "pub_sub",
+      "pub_sub2",
+      "pub_sub3",
+      "nat",
+      "igw"
+    ],
+    "terraform_constraints": []
+  },
+  "waf": {
+    "files": [
+      "waf/main.tf",
+      "waf/out.tf",
+      "waf/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_wafv2_web_acl",
+        "this"
+      ],
+      [
+        "aws_cloudwatch_log_group",
+        "this"
+      ],
+      [
+        "aws_wafv2_web_acl_logging_configuration",
+        "this"
+      ],
+      [
+        "aws_wafv2_ip_set",
+        "this"
+      ]
+    ],
+    "inputs": [
+      "project",
+      "alb_arn",
+      "associate_alb",
+      "web_acl_name",
+      "rules",
+      "ipset_allocation",
+      "enable_ipset",
+      "ipset_name",
+      "log_prefix"
+    ],
+    "outputs": [
+      "waf_arn"
+    ],
+    "terraform_constraints": []
+  },
+  "ws": {
+    "files": [
+      "ws/data.tf",
+      "ws/main.tf",
+      "ws/vars.tf"
+    ],
+    "resources": [
+      [
+        "aws_ecs_cluster",
+        "ecs_cluster-ws"
+      ],
+      [
+        "aws_ecs_cluster_capacity_providers",
+        "ws_capacity"
+      ],
+      [
+        "aws_ecs_service",
+        "ws"
+      ],
+      [
+        "aws_cloudwatch_log_group",
+        "logs_ws"
+      ],
+      [
+        "aws_kms_key",
+        "ws_key"
+      ]
+    ],
+    "inputs": [
+      "cluster_name",
+      "task_family_name",
+      "tg_arn",
+      "cluster_subnet",
+      "cluster_role",
+      "container_for_balancing",
+      "service_name",
+      "ecs_sg",
+      "ecr_api",
+      "task_role",
+      "ecr_env",
+      "project",
+      "task",
+      "env_prefix"
+    ],
+    "outputs": [],
+    "terraform_constraints": []
+  }
+}

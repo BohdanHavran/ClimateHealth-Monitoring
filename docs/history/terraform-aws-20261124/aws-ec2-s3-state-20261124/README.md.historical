@@ -1,0 +1,20 @@
+# ClimateHealth — AWS Terraform review scaffold
+
+**Не запускати зараз. Не готовий deployment.** Ресурси не створені, Terraform/Docker не виконувалися. Provider hashicorp/aws = 6.74.0 перевірено у публічному Terraform Registry 24.11.2026; бінарник не завантажено, schema validation не виконувалася, lockfile ще відсутній.
+
+- `bootstrap/main.tf`: проєктний S3 state bucket, versioning, SSE-S3, public-access block, TLS-only, prevent_destroy; boolean approval guard за замовчуванням false. Потребує окремого обмеженого адміністратора та погодженого plan.
+- `modules/networking/main.tf`: VPC, одна public і дві private subnet, тільки public default route, private S3 gateway endpoint із read-only artifact policy.
+- `modules/security/main.tf`: app 80/443, ML 8001 app-only, MySQL 3306 app-only, AI egress S3-only. Немає public SSH/ML/DB rules. Це SG, не готова TLS/auth implementation.
+- `environments/dev`, `environments/production`: **resource-free roots** для review provider/backend/account/region. Вони ще не викликають модулі; їх apply не розгорне систему. Example backend — placeholder, не credentials.
+
+## Майбутні module contracts
+| Модуль | Вхід / вихід / критерій готовності |
+|---|---|
+| application | approved AMI/subnet/SG/instance profile/digest; encrypted gp3, IMDSv2 required, T3 Standard, один явний IPv4, reverse proxy/TLS/health; без cloud-init secrets |
+| ml-server | private subnet/SG/S3 instance profile/approved AMI/release manifest; public IPv4=false, CPU-only, baked S3 release agent; private TLS та model_unavailable до моделі |
+| mysql | вибір ec2-local або RDS MySQL 8.4; для RDS encrypted gp3, private subnet group, publicly_accessible=false, app-only SG, backup window/retention, deletion protection, skip_final_snapshot=false; для EC2 окремий encrypted data volume/backup/restore |
+| release storage / IAM | artifact bucket окремий від state, мінімальні ролі OIDC та instance profiles, prefix/environment isolation, object versioning/signatures, lifecycle з rollback window |
+
+Workload-модулі ще не створено: немає погоджених AMI/регіону/домену, варіанта БД, RPO/RTO або memory measurements. Зараз потрібні лише networking/security та bootstrap; немає порожніх каталогів, що імітують реалізацію.
+
+Докладний перехід: [Terraform guide](../../../docs/TERRAFORM_GUIDE.md). Рішення й ціни: [ADR 0004](../../../docs/adr/0004-aws-infrastructure-and-credit-budget.md), [AWS cost](../../../docs/AWS_COST_ESTIMATE.md). Історичний батьківський root не використовувати й не обходити рекурсивними init/apply.
