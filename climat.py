@@ -4,6 +4,7 @@ import io
 import base64
 import zipfile
 import math
+import ssl
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -20,6 +21,7 @@ import pymysql  # Replaced mysql.connector with pymysql
 import time
 
 from climate_health.config import get_db_password
+from climate_health.tls import mysql_tls_options, DatabaseTLSConfigurationError, DatabaseTLSVerificationError
 from climate_health.validation import finite_number, bounded_integer
 from climate_health.fuzzy import build_fis_system, new_fis_sim, clamp_inputs, compute_hri
 from climate_health.rate_limit import WindowLimiter
@@ -45,17 +47,23 @@ def get_db():
     if 'db' not in g:
         password = get_db_password()
         port = bounded_integer(os.getenv('DB_PORT', '3306'), 'DB_PORT', 1, 65535)
-        g.db = pymysql.connect(
-            host=DB_HOST,
-            user=DB_USER,
-            password=password,
-            db=DB_NAME,
-            port=port,
-            autocommit=False,
-            connect_timeout=3,
-            read_timeout=5,
-            write_timeout=5,
-        )
+        tls_options = mysql_tls_options(DB_HOST)
+        try:
+            connection = pymysql.connect(
+                host=DB_HOST, user=DB_USER, password=password, db=DB_NAME, port=port,
+                autocommit=False, connect_timeout=3, read_timeout=5, write_timeout=5,
+                **tls_options,
+            )
+        except (ssl.SSLError, pymysql.err.OperationalError) as exc:
+            tls_failed = (
+                isinstance(exc, ssl.SSLError)
+                or isinstance(getattr(exc, 'original_exception', None), ssl.SSLError)
+                or (exc.args and exc.args[0] == 2026)
+            )
+            if tls_failed:
+                raise DatabaseTLSVerificationError("MySQL TLS certificate/hostname verification failed") from exc
+            raise
+        g.db = connection
         if not app.config["DATABASE_WRITES_ENABLED"]:
             with g.db.cursor() as cursor:
                 cursor.execute("START TRANSACTION READ ONLY")
@@ -409,6 +417,9 @@ def readiness():
             cursor.execute('SELECT 1')
             cursor.fetchone()
         return jsonify(status='ok', database='available')
+    except (DatabaseTLSConfigurationError, DatabaseTLSVerificationError):
+        app.logger.warning('Readiness check failed: database TLS verification/configuration')
+        return jsonify(status='unavailable', database='unavailable', reason='database_tls_failed'), 503
     except Exception:
         app.logger.warning('Readiness check failed: database unavailable')
         return jsonify(status='unavailable', database='unavailable'), 503

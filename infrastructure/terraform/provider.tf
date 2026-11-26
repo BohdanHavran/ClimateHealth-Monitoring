@@ -15,7 +15,6 @@ provider "aws" {
       Project     = "ClimateHealth"
       Environment = var.environment
       ManagedBy   = "Terraform"
-      Owner       = var.owner
     }
   }
 }

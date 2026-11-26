@@ -6,6 +6,9 @@
 !ml_contract.py
 !climate_health/
 !climate_health/**
+!infrastructure/
+!infrastructure/certificates/
+!infrastructure/certificates/rds-us-east-1-bundle.crt
 !templates/
 !templates/**
 !static/

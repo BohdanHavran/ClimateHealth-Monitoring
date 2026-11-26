@@ -1,5 +1,7 @@
 # Диплом — дорожня карта ClimateHealth
 
+> Оновлення 26.11.2026: [поетапне розгортання](terraform/CONTROLLED_DEPLOYMENT.md) замінює попередні вимоги всіх runtime inputs на першому Plan. Лише environment/aws_region/name_suffix required; gates лишаються false до review. HCP володіє ECS task revisions; direct ECS deployment example лишається disabled. Авторизацію HCP не змінювати.
+
 24.11.2026. Зберігаються виконані фази1–3, React redesign4b3033b, Flask/MySQL/API/27HRI rules та ML unavailable boundary. GitHub main; push не дозволений поточним завданням.
 
 ## Підготовлено
@@ -11,7 +13,7 @@
 
 ## Наступні gates
 1. Затвердити ECSsmall/ALB demo window/RDS/AIoff, us-east-1 та data residency, gross monthly budget$35 й credit eligibility/expiration. Альтернативу Compose безALB для24/7 можна обрати після зміни пріоритету.
-2. Узгодити HCP organization/project/workspace names, доступний Free plan/permissions, VCS connection, окремі HCP phase roles та GitHub release roles, MFA bootstrap. До дозволу не підключати repo й не запускати HCP.
+2. HCP VCS/root та авторизація вже налаштовані користувачем; не замінювати спосіб доступу. Перевірити потрібні workspace inputs і scope існуючих permissions у своєму середовищі. Аудит не змінює configuration й не запускає HCP. Повний [розбір](terraform/AUDIT_REPORT.md) та [required inputs](terraform/REQUIRED_VARIABLES_AUDIT.md).
 3. Після дозволу HCP init/fmt/schema/plan, справжній lockfile, module/policy tests; Linux Docker builds/image scans; жодних локальних Terraform/Docker зараз.
 4. Approved AL2023 AMI/image digest, domain/Route53/ACM, runtime SSM reader, MySQL TLS client support, дозволені дані/backup/restore, AI AMI agent/CA/token. Вони блокують реальний запуск, не маскуються успішною source перевіркою.
 5. Окреме схвалення конкретного remote plan перед apply; application CI/CD activation після image/health/rollback tests. Application release не робить Terraform apply.

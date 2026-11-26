@@ -10,6 +10,7 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 COPY --chown=10001:10001 climat.py ./
 COPY --chown=10001:10001 ml_contract.py ./
 COPY --chown=10001:10001 climate_health/ ./climate_health/
+COPY --chown=10001:10001 infrastructure/certificates/ ./infrastructure/certificates/
 COPY --chown=10001:10001 templates/ ./templates/
 COPY --chown=10001:10001 static/ ./static/
 USER 10001:10001

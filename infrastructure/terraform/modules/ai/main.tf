@@ -1,3 +1,5 @@
+variable "provisioned" { type = bool }
+variable "tags" { type = map(string) }
 variable "permissions_boundary_arn" {
   type = string
 }
@@ -24,21 +26,24 @@ variable "artifact_bucket_arn" {
 }
 resource "aws_iam_role" "this" {
   permissions_boundary = var.permissions_boundary_arn
-  count = var.enabled ? 1 : 0
+  count = var.provisioned ? 1 : 0
   name = "${var.name}-ai"
   assume_role_policy = jsonencode({Version="2012-10-17",Statement=[{Effect="Allow",Principal={Service="ec2.amazonaws.com"},Action="sts:AssumeRole"}]})
 }
 resource "aws_iam_role_policy" "read" {
-  count = var.enabled ? 1 : 0
+  count = var.provisioned ? 1 : 0
   role = aws_iam_role.this[0].id
   policy = jsonencode({Version="2012-10-17",Statement=[{Effect="Allow",Action="s3:GetObject",Resource="${var.artifact_bucket_arn}/ai/*"}]})
 }
 resource "aws_iam_instance_profile" "this" {
-  count = var.enabled ? 1 : 0
+  depends_on = [aws_iam_role_policy.read]
+  count = var.provisioned ? 1 : 0
   role = aws_iam_role.this[0].name
 }
 resource "aws_instance" "this" {
-  count = var.enabled ? 1 : 0
+  count = var.provisioned ? 1 : 0
+  tags = var.tags
+  volume_tags = var.tags
   ami = var.ami_id
   instance_type = var.instance_type
   subnet_id = var.subnet_id
@@ -54,6 +59,7 @@ resource "aws_instance" "this" {
     delete_on_termination = false
   }
   lifecycle {
+    prevent_destroy = true
     precondition {
       condition = var.ami_id != null
       error_message = "Approved AMI with private TLS/auth, model_unavailable and S3 reconcile agent required."
@@ -61,3 +67,10 @@ resource "aws_instance" "this" {
   }
 }
 output "private_ip" { value = try(aws_instance.this[0].private_ip,null) }
+
+# Power state is separate from provisioning; demo off retains the same tracked disk/instance.
+resource "aws_ec2_instance_state" "power" {
+  count = var.provisioned ? 1 : 0
+  instance_id = aws_instance.this[0].id
+  state = var.enabled ? "running" : "stopped"
+}

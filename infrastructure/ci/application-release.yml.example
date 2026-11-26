@@ -1,3 +1,4 @@
+# HOLD: HCP now owns ECS task configuration. The old direct UpdateService draft below must be redesigned and approved before activation.
 # Review blueprint only. Not loaded by GitHub from this .example file.
 # Job is additionally disabled. Infrastructure is managed exclusively in HCP Terraform.
 name: ClimateHealth application release (draft)

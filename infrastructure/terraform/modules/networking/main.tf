@@ -61,6 +61,12 @@ resource "aws_vpc_endpoint" "s3" {
   route_table_ids = [aws_route_table.public.id, aws_route_table.private.id]
 }
 output "vpc_id" { value = aws_vpc.this.id }
-output "public_subnet_ids" { value = aws_subnet.public[*].id }
-output "private_subnet_ids" { value = aws_subnet.private[*].id }
+output "public_subnet_ids" {
+  value = aws_subnet.public[*].id
+  depends_on = [aws_route.internet, aws_route_table_association.public]
+}
+output "private_subnet_ids" {
+  value = aws_subnet.private[*].id
+  depends_on = [aws_route_table_association.private, aws_vpc_endpoint.s3]
+}
 output "availability_zone" { value = local.zones[0] }

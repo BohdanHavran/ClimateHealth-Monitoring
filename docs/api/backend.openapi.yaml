@@ -148,7 +148,7 @@ paths:
         '400': {$ref: '#/components/responses/Invalid'}
         '413': {description: Тіло понад 256 KiB}
         '429': {$ref: '#/components/responses/RateLimited'}
-        '503': {description: data.reason model_unavailable/service_timeout/service_unavailable/service_not_configured/service_configuration_invalid/model_contract_mismatch; data.value=null}
+        '503': {description: data.reason model_unavailable/service_timeout/service_tls_failed/service_unavailable/service_not_configured/service_configuration_invalid/model_contract_mismatch; data.value=null}
 components:
   schemas:
     CurrentWeather:

@@ -1,5 +1,7 @@
 # ClimateHealth — Application CI/CD та HCP infrastructure pipeline
 
+> Оновлення 26.11.2026: [поетапне розгортання](terraform/CONTROLLED_DEPLOYMENT.md) замінює попередні вимоги всіх runtime inputs на першому Plan. Лише environment/aws_region/name_suffix required; gates лишаються false до review. HCP володіє ECS task revisions; direct ECS deployment example лишається disabled. Авторизацію HCP не змінювати.
+
 Оновлення шляхів 25.11.2026: source checker та обидва HCP workspaces використовують `infrastructure/terraform`; VCS trigger `/infrastructure/terraform/**` включає modules. `.github/workflows/terraform-ci.yml` виконує лише `python scripts/check_infrastructure_sources.py` з кореня репозиторію. Release draft не виконує Terraform і не залежить від попередньої вкладеності. Немає дублюючого GitHub Terraform Apply. [Звіт перенесення](TERRAFORM_ROOT_SIMPLIFICATION.md).
 
 ## Розмежування власників

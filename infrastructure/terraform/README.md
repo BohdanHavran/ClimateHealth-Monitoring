@@ -1,12 +1,15 @@
 # ClimateHealth — один HCP Terraform root
 
-**Review code, не запущена й не перевірена Terraform інфраструктура.** Не запускати локально Terraform/Docker. HCP VCS connection/runs/apply також потребують окремого дозволу. Не створювали state або AWS-ресурсів.
+> Оновлення 26.11.2026: [поетапне розгортання](../../docs/terraform/CONTROLLED_DEPLOYMENT.md) замінює попередні вимоги всіх runtime inputs на першому Plan. Лише environment/aws_region/name_suffix required; gates лишаються false до review. HCP володіє ECS task revisions; direct ECS deployment example лишається disabled. Авторизацію HCP не змінювати.
+
+**Review code, не запущена й не перевірена Terraform інфраструктура.** Не запускати локально Terraform/Docker. HCP VCS та авторизацію вже налаштовано користувачем; їх не змінювати. Нові runs/apply потребують окремого дозволу. Не створювали state або AWS-ресурсів.
 
 ```
 infrastructure/terraform/
   main.tf                 # 8 local module calls, review gate, origin DNS alias
   provider.tf             # hashicorp/aws=6.74.0, region input, no static credentials
-  variable.tf             # typed workspace inputs and safe gates
+  variable.tf             # 25 root inputs and unchanged safe gates
+  data.tf                 # caller identity using existing AWS credentials
   output.tf               # non-sensitive endpoints/identifiers/reviewed task handoff
   modules/
     networking/
@@ -29,8 +32,12 @@ infrastructure/terraform/
 
 ## Provider та workspace inputs
 
-`provider.tf` використовує aws_region без default, Terraform >=1.11,<2, AWS =6.74.0 і default_tags (Project/Environment/ManagedBy/Owner). Provider-level account guard прибрано за рішенням користувача; aws_account_id залишається обовʼязковим для перевірок ACM/SSM/IAM ARN, але не перевіряє фактичний account credentials. Доступ обмежують HCP OIDC exact trust, окремі dev/production phase roles, least-privilege permissions та review run identity. HCP dynamic OIDC надає credentials через environment, без access keys/profile у коді. Регіон не затверджено: validator тимчасово дозволяє лише кошторисний кандидат us-east-1; інший регіон потребує окремого review. CloudFront використовує стандартний distribution certificate; ALB потребує наявного ACM certificate у регіоні backend, тому зайвий alias не потрібний.
+`provider.tf` зберігає aws_region без default, Terraform >=1.11,<2, AWS =6.74.0, Project/Environment/ManagedBy tags. Owner variable/tag та manual aws_account_id видалено; data.aws_caller_identity.current.account_id з чинної identity використовується у3ARNvalidations. Це не offlinePlan і не перевірка незалежно очікуваного account. Авторизацію користувача не змінено, credentials/profile у коді відсутні. CloudFront використовує default distribution certificate, ALB — переданий regional ACM; зайвого alias немає.
 
-Root inputs `region` → `aws_region`, `account_id` → `aws_account_id`: у HCP UI використовувати нові назви, видалити старі дублікати перед першим run. Child backend input `region` збережено; outputs і resource/module labels незмінні. VPC/subnet CIDRs тепер явні inputs з попередніми defaults; їх зміну після provisioning не вважати безпечним перейменуванням. RDS class/engine/storage/retention, CloudFront PAYG/PriceClass100 і ALB HTTPS/health/drain налаштування залишено фіксованими в модулях для збереження архітектури та кошторису. [Повний HCP UI inventory](../../docs/HCP_TERRAFORM.md#workspace-variable-inventory).
+Поточні root inputs:25, із них11без default; child variables49 заповнює main.tf. Старі owner/aws_account_id більше не потрібні UI, нових auth environment variables не додається. CIDR defaults/activation gates/workload resource configuration не змінювали. [Повний HCP inventory](../../docs/HCP_TERRAFORM.md#workspace-variable-inventory), [аудит усіх змінних](../../docs/terraform/VARIABLES_REFERENCE.md).
 
 Старих aws/, dev/, production/, history/, backend.tf і сторонніх provider scaffolds у цьому root немає. Архіви поза ним: [legacy](../../docs/history/terraform-legacy-20261125/) і [попередній AWS](../../docs/history/terraform-aws-20261124/). Історичні звіти з попередніми шляхами не є поточними інструкціями. [Звіт перенесення](../../docs/TERRAFORM_ROOT_SIMPLIFICATION.md).
+
+## Повний source audit
+
+[Аудит і метод Graphify/fallback](../../docs/terraform/AUDIT_REPORT.md), [dependency graph/DOT](../../docs/terraform/DEPENDENCY_GRAPH.md), [ресурси](../../docs/terraform/RESOURCES_AUDIT.md), [traffic](../../docs/terraform/NETWORK_GRAPH.md). HCP уже підключено за повідомленням користувача, доступ/робочіspaces не змінювалися. Graphify native HCL parser відсутній; граф побудовано явно позначеним custom static analyzer.

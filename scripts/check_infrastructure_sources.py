@@ -41,7 +41,7 @@ def balanced(text):
 
 def main():
     files=list(BASE.rglob("*.tf"));assert files
-    assert {p.name for p in BASE.glob("*.tf")} == {"main.tf", "provider.tf", "variable.tf", "output.tf"}, "Unexpected root scaffold"
+    assert {p.name for p in BASE.glob("*.tf")} == {"main.tf", "provider.tf", "variable.tf", "output.tf", "data.tf"}, "Unexpected root scaffold"
     assert {p.name for p in BASE.iterdir() if p.is_dir()} == {"modules"}, "Only modules may be nested under the active root"
     provider=(BASE/"provider.tf").read_text(encoding="utf8")
     assert re.search(r'(?m)^\s*region\s*=\s*var\.aws_region\s*$', provider)
@@ -52,9 +52,12 @@ def main():
     variables=dict(re.findall(r'variable\s+"([^"\n]+)"\s*\{(.*?)^\}',root_text,re.M|re.S))
     assert set(re.findall(r'\bvar\.([a-z_]+)',root_text))<=variables.keys(), "Undeclared root input"
     assert "region" not in variables and "account_id" not in variables
-    for name in ["aws_region", "aws_account_id", "environment", "owner"]:
+    assert "owner" not in variables and "aws_account_id" not in variables
+    assert 'data "aws_caller_identity" "current"' in root_text
+    assert root_text.count("data.aws_caller_identity.current.account_id") == 3, "Preserve all three ARN account checks"
+    for name in ["aws_region", "environment"]:
         assert name in variables and not re.search(r'(?m)^\s*default\s*=',variables[name]), (name,"Must be an explicit HCP input")
-    for name in ["infrastructure_reviewed", "application_window_open", "service_enabled", "ai_enabled", "allow_deployment_capacity"]:
+    for name in ["infrastructure_reviewed", "application_window_open", "service_enabled", "ai_enabled", "allow_deployment_capacity", "artifacts_provisioned", "database_provisioned", "edge_provisioned", "backend_provisioned", "ai_provisioned", "ai_runtime_reviewed"]:
         assert re.search(r'\bdefault\s*=\s*false\b',variables[name]), (name,"Activation gate changed")
     workflow=(ROOT/".github/workflows/terraform-ci.yml").read_text(encoding="utf8")
     assert "python scripts/check_infrastructure_sources.py" in workflow

@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-26",
+  "method": "offline lexical/static subset, not Terraform validate/plan",
+  "terraform_run": false,
+  "docker_run": false,
+  "hcp_config_changed": false,
+  "aws_resources_changed": false,
+  "mysql_changed": false,
+  "tf_files": 22,
+  "modules": 8,
+  "resource_blocks": 70,
+  "root_variables": 33,
+  "child_variables": 60,
+  "nodes": 303,
+  "edges": 918,
+  "unresolved_supported_references": 0,
+  "symbolic_dependency_cycles": 0,
+  "required_inputs": [
+    "environment",
+    "aws_region",
+    "name_suffix"
+  ],
+  "original_resource_declarations_preserved": true,
+  "new_resource_type": "aws_ec2_instance_state",
+  "moved_blocks": 22,
+  "fuzzy_source_unchanged": true,
+  "public_ca_certificates": 3,
+  "python_tests": {
+    "total": 81,
+    "passed": 78,
+    "skipped": 3
+  },
+  "frontend_tests": 18,
+  "limitations": "No HCL provider schema, expanded instance graph, Terraform expression evaluation, live TLS/RDS/AI/ECS, remote CI or billing verification."
+}

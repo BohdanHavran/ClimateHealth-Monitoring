@@ -1,0 +1,19 @@
+{
+  "graphify_version": "0.9.104",
+  "method": "Graphify detect/extract attempted; native HCL extractor unavailable due missing tree_sitter_hcl; actual graphs use custom offline lexical/static analysis",
+  "scanned_root": "infrastructure/terraform",
+  "files": 21,
+  "detector_code_files": 21,
+  "nodes": 0,
+  "edges": 0,
+  "llm_input_tokens": 0,
+  "llm_output_tokens": 0,
+  "baseline_commit": "5f01e24",
+  "terraform_or_aws_execution": false,
+  "missing_dependency": "tree_sitter_hcl",
+  "packages_installed": false,
+  "final_graph_method": "custom offline lexical/static HCL subset analysis",
+  "final_nodes": 271,
+  "final_edges": 729,
+  "final_code_files": 22
+}
