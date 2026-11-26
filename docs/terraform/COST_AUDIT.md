@@ -1,3 +1,5 @@
+> Актуальне уточнення 26.11.2026: реалізовано [варіант B](VARIANT_B_REPORT.md): 6 modules/15 root inputs, RDS-only, AI відкладено, HCP володіє ECS revisions. Старі gates та EC2 MySQL нижче — контекст попереднього етапу. Поточні inputs/runbook/графи наведено у звіті B. Наступний крок: review diff і окреме погодження публікації; потім дозволений remote validate/Plan, не автоматичний Apply.
+
 # Cost audit: ресурси, gates та постійні витрати
 
 > Базовий аудит 25.11.2026. Висновки про 11 required inputs, відсутній TLS/ML URL та старі gates описують стан ДО виправлень. Поточні зміни й умовні inputs: [CONTROLLED_DEPLOYMENT](CONTROLLED_DEPLOYMENT.md), результати: [READINESS_REPORT](READINESS_REPORT.md). Старі числові оцінки не є новими вимірюваннями.

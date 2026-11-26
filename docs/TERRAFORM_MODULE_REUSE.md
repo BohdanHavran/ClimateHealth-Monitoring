@@ -1,3 +1,5 @@
+> Актуальне уточнення 26.11.2026: реалізовано [варіант B](terraform/VARIANT_B_REPORT.md): 6 modules/15 root inputs, RDS-only, AI відкладено, HCP володіє ECS revisions. Старі gates та EC2 MySQL нижче — контекст попереднього етапу. Поточні inputs/runbook/графи наведено у звіті B. Наступний крок: review diff і окреме погодження публікації; потім дозволений remote validate/Plan, не автоматичний Apply.
+
 # ClimateHealth — повторне використання власних Terraform-модулів
 
 24.11.2026. Перевірено доступ до `D:/Робота/Codica/golfer2golfer/terraform/modules/`. Знайдено **28 каталогів**, не припускається наявність інших. Оригінали лише читалися, Git-команд у сторонньому проєкті не було. Інвентар охоплює активні resource/variable/output декларації, без закоментованих блоків; точні імена inputs/outputs і Terraform constraints — [JSON](reports/terraform-module-inventory.json).

@@ -1,7 +1,7 @@
 # Adapted from owner ecr/main.tf; see TERRAFORM_MODULE_REUSE.md.
 resource "aws_ecr_repository" "ecr" {
 
-  for_each             = var.enabled ? toset(var.ecr_names) : toset([])
+  for_each             = toset(var.ecr_names)
   lifecycle { prevent_destroy = true }
   name                 = each.value
   image_tag_mutability = "IMMUTABLE"

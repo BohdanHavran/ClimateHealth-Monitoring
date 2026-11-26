@@ -1,4 +1,3 @@
-# HOLD: HCP now owns ECS task configuration. The old direct UpdateService draft below must be redesigned and approved before activation.
 # Review blueprint only. Not loaded by GitHub from this .example file.
 # Job is additionally disabled. Infrastructure is managed exclusively in HCP Terraform.
 name: ClimateHealth application release (draft)
@@ -11,7 +10,7 @@ on:
         required: true
       component:
         type: choice
-        options: [frontend, backend, ai]
+        options: [frontend, backend]
         required: true
 permissions:
   contents: read
@@ -69,15 +68,17 @@ jobs:
           INVALIDATION=$(aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" --paths / /index.html --query Invalidation.Id --output text)
           aws cloudfront wait invalidation-completed --distribution-id "$DISTRIBUTION" --id "$INVALIDATION"
       - name: Build and push immutable container
-        if: inputs.component != 'frontend'
+        if: inputs.component == 'backend'
         env:
           REGISTRY: ${{ vars.ECR_REGISTRY }}
           BACKEND_REPOSITORY: ${{ vars.BACKEND_REPOSITORY }}
-          AI_REPOSITORY: ${{ vars.AI_REPOSITORY }}
-          COMPONENT: ${{ inputs.component }}
         run: |
+          set -euo pipefail
+          EXPECTED=$(aws sts get-caller-identity --query Account --output text)
+          test "$REGISTRY" = "$EXPECTED.dkr.ecr.us-east-1.amazonaws.com"
           aws ecr get-login-password | docker login --username AWS --password-stdin "$REGISTRY"
-          if [ "$COMPONENT" = backend ]; then REPOSITORY="$BACKEND_REPOSITORY"; FILE=Dockerfile; else REPOSITORY="$AI_REPOSITORY"; FILE=infrastructure/docker/ml.Dockerfile; fi
+          REPOSITORY="$BACKEND_REPOSITORY"
+          FILE=Dockerfile
           TAG="$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           docker build -f "$FILE" -t "$REGISTRY/$REPOSITORY:$TAG" .
           docker push "$REGISTRY/$REPOSITORY:$TAG"
@@ -86,47 +87,7 @@ jobs:
           jq -e 'has("imageScanFindings") and (((.imageScanFindings.findingSeverityCounts.CRITICAL // 0) + (.imageScanFindings.findingSeverityCounts.HIGH // 0)) == 0)' "$RUNNER_TEMP/scan.json" > /dev/null
           DIGEST=$(aws ecr describe-images --repository-name "$REPOSITORY" --image-ids imageTag="$TAG" --query 'imageDetails[0].imageDigest' --output text)
           printf 'RELEASE_IMAGE=%s/%s@%s\n' "$REGISTRY" "$REPOSITORY" "$DIGEST" >> "$GITHUB_ENV"
-      - name: Backend rollout after approved task-definition handoff
-        if: inputs.component == 'backend'
-        env:
-          CLUSTER: ${{ vars.ECS_CLUSTER }}
-          SERVICE: ${{ vars.ECS_SERVICE }}
-          BASE: ${{ vars.REVIEWED_TASK_DEFINITION_ARN }}
-          FAMILY: ${{ vars.ECS_TASK_FAMILY }}
-          ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
-          TASK_ROLE: ${{ vars.ECS_TASK_ROLE_ARN }}
-          EXEC_ROLE: ${{ vars.ECS_EXECUTION_ROLE_ARN }}
-        run: |
-          PREVIOUS=$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --query 'services[0].taskDefinition' --output text)
-          aws ecs describe-task-definition --task-definition "$BASE" --query taskDefinition > "$RUNNER_TEMP/base.json"
-          python scripts/prepare_ecs_revision.py --input "$RUNNER_TEMP/base.json" --output "$RUNNER_TEMP/candidate.json" --image "$RELEASE_IMAGE" --family "$FAMILY" --account "$ACCOUNT" --task-role "$TASK_ROLE" --execution-role "$EXEC_ROLE"
-          NEW=$(aws ecs register-task-definition --cli-input-json "file://$RUNNER_TEMP/candidate.json" --query taskDefinition.taskDefinitionArn --output text)
-          aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --task-definition "$NEW" > /dev/null
-          if ! aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"; then
-            aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --task-definition "$PREVIOUS" > /dev/null
-            exit 1
-          fi
-          ACTUAL=$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --query 'services[0].taskDefinition' --output text)
-          if [ "$ACTUAL" != "$NEW" ]; then
-            aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --task-definition "$PREVIOUS" > /dev/null
-            exit 1
-          fi
-      - name: AI signed artifact publication (private reconciliation is an AMI contract)
-        if: inputs.component == 'ai'
-        env:
-          ARTIFACT_BUCKET: ${{ vars.ARTIFACT_BUCKET }}
-          SIGNING_KEY: ${{ secrets.AI_RELEASE_SIGNING_KEY_PEM }}
-        run: |
-          umask 077
-          trap 'rm -f "$RUNNER_TEMP/signing.pem"' EXIT
-          printf '%s' "$SIGNING_KEY" > "$RUNNER_TEMP/signing.pem"
-          docker save "$RELEASE_IMAGE" -o "$RUNNER_TEMP/ai-image.tar"
-          ARCHIVE_HASH=$(sha256sum "$RUNNER_TEMP/ai-image.tar" | cut -d' ' -f1)
-          IMAGE_ID=$(docker image inspect "$RELEASE_IMAGE" --format '{{.Id}}')
-          jq -n --arg image "$RELEASE_IMAGE" --arg image_id "$IMAGE_ID" --arg hash "$ARCHIVE_HASH" --arg commit "$GITHUB_SHA" '{schema_version:1,image:$image,image_id:$image_id,archive_sha256:$hash,commit:$commit,model_status:"unavailable"}' > "$RUNNER_TEMP/manifest.json"
-          openssl pkeyutl -sign -rawin -inkey "$RUNNER_TEMP/signing.pem" -in "$RUNNER_TEMP/manifest.json" -out "$RUNNER_TEMP/manifest.sig"
-          PREFIX="s3://$ARTIFACT_BUCKET/ai/$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          aws s3 cp "$RUNNER_TEMP/ai-image.tar" "$PREFIX/image.tar"
-          aws s3 cp "$RUNNER_TEMP/manifest.sig" "$PREFIX/manifest.sig"
-          aws s3 cp "$RUNNER_TEMP/manifest.json" "$PREFIX/manifest.json"
-          # No automatic activation pointer: approved AMI signature/schema/version checks required first.
+          test "${#DIGEST}" -eq 71
+          [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
+          printf 'Approved handoff candidate: `%s/%s@%s`\nSet HCP backend_image only after review; HCP owns ECS deployment.\n' "$REGISTRY" "$REPOSITORY" "$DIGEST" >> "$GITHUB_STEP_SUMMARY"
+          # No ECS mutations or HCP runs from this disabled image-publishing draft.

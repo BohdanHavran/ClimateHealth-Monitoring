@@ -132,6 +132,18 @@ VARIABLE_PURPOSE.update({
     "ai_ami_id": "Погоджена приватна AI AMI; потрібна при ai_provisioned=true.",
     "listener_arn": "ALB listener-rule ARN у lifecycle precondition ECS service; вузька залежність готовності ALB.",
 })
+
+# Reviewed current resource cautions; historical alternative types above are not rendered.
+RESOURCE_NOTES.update({
+    'aws_subnet': ('Дві public та дві private /24 subnets у двох AZ.', 'Без окремої hourly', 'Private DB без internet default route; public host має явну IP у LT.', 'CIDR/AZ/VPC зміни можуть спричинити replacement.'),
+    'aws_security_group': ('Три SG для ALB/backend/RDS.', 'Без окремої hourly', 'Порти задають окремі SG-to-SG rules.', 'Зміна VPC/name може замінити SG; жодного AI SG.'),
+    'aws_ecr_repository': ('Єдиний backend immutable image repository.', 'Storage/transfer за використанням; порожній repository без storage charge.', 'IAM-only AWS API.', 'prevent_destroy; tagged images накопичуються, retention потребує review.'),
+    'aws_iam_role': ('Окремі EC2 host та ECS execution identities.', 'Без окремої hourly', 'Service trust; не мережевий endpoint.', 'Існуюча permissions boundary потрібна API; task role без permissions видалена. Boundary content не перевірено.'),
+    'aws_launch_template': ('Approved AL2023 ECS AMI, t3.small, encrypted20GBgp3, IMDSv2.', 'Створені host/EBS/IPv4 оплачуються.', 'Public IP, inbound лише ALB SG8080; SSH немає.', 'EC2/EBS tags є; нова LT version не перезапускає наявні hosts, Instance Refresh окремо погоджується.'),
+    'aws_ecs_capacity_provider': ('Managed scaling/draining backend ASG.', 'EC2/EBS/IP та managed monitoring charges окремо.', 'Control plane, не endpoint.', 'Початковий empty-ASG bootstrap при count0; count1 лише після association. Scale-from-zero/rolling runtime не перевірено.'),
+    'aws_ecs_task_definition': ('HCP-owned backend revision: bridge8000/8080,1024MiB, read-only root.', 'Без compute hourly за declaration.', 'Task definition сама не запускає container.', 'DB verify_identity/CA env передані; runtime reader та TLS chain ще перевірити. tmpfs споживає RAM; ML runtime не provisioned.'),
+    'aws_ecs_service': ('HCP-owned service через CP, ALB readiness, circuit breaker і steady-state waiter.', 'Capacity/ALB/log charges.', 'ALB до instance8080.', 'Max1 deployment0/100 допускає перерву; max2 дозволяє100/200. Немає ignore task_definition чи паралельного Actions deployment; runtime/rollback потребує перевірки.'),
+})
 RESOURCE_NOTES['aws_ec2_instance_state'] = (
     "Керує running/stopped збереженого AI EC2", "EC2 compute тільки running; EBS залишається платним",
     "Не створює endpoint", "Provisioned instance захищено prevent_destroy; power off не видаляє диск. Створення instance спочатку запускає EC2 навіть якщо кінцева state stopped.")
@@ -140,3 +152,21 @@ RESOURCE_NOTES['terraform_data'] = (
     "Module depends_on повʼязує gate з усіма етапами; false навмисно блокує Plan. Це не IAM policy і не гарантія проти вилучення guard з конфігурації.")
 purpose,cost,public,risk=RESOURCE_NOTES['aws_ecs_service']
 RESOURCE_NOTES['aws_ecs_service']=(purpose,cost,public,"HCP володіє task_definition. Default min0 допускає downtime; host8080 потребує другого EC2 для rolling, ще не перевірено.")
+
+# Variant B: current contracts supersede historical provisioning/review gates.
+VARIABLE_PURPOSE.update({
+    'deploy_application': 'Створення API compute, ALB, DNS та API origin; не керує життєвим циклом RDS чи сховищ.',
+    'backend_desired_count': 'Нуль під час bootstrap Capacity Provider, один після перевірки його готовності.',
+    'backend_max_instances': 'Стеля ASG: один host або погоджений тимчасовий другий для deployment.',
+    'desired_count': 'Бажана кількість ECS tasks 0/1; також min_size ASG, desired_capacity далі керує Capacity Provider.',
+    'max_instances': 'Максимальна кількість EC2 у backend ASG, не постійна кількість серверів.',
+    'repository_arn': 'ARN єдиного backend ECR repository для scoped pull permissions.',
+    'listener_rule_arn': 'Точна залежність готовності HTTPS forwarding rule перед ECS service.',
+    'log_group_name': 'Ім’я незалежно збереженої root CloudWatch log group.',
+    'log_group_arn': 'ARN збереженої log group для scoped execution IAM permissions.',
+    'api_enabled': 'Додає API origin/behavior до постійного CloudFront; S3 frontend залишається.',
+    'vpc_cidr': 'IPv4 /16, з якого обчислюються дві public і дві private /24 subnets.',
+    'permissions_boundary_arn': 'Наявна погоджена IAM boundary для ECS host/execution roles; потрібна лише з API deployment.',
+    'runtime_secret_arns': 'SSM references DB_USER/DB_PASS до окремого RDS reader; не plaintext credentials.',  # pragma: allowlist secret -- documentation purpose, no credential value
+    'origin_verification_header': 'Випадковий sensitive URL-safe header 32–128 символів без wildcard/пробілів; потрібний лише API.',
+})

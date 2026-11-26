@@ -54,11 +54,16 @@ def main():
     assert "region" not in variables and "account_id" not in variables
     assert "owner" not in variables and "aws_account_id" not in variables
     assert 'data "aws_caller_identity" "current"' in root_text
-    assert root_text.count("data.aws_caller_identity.current.account_id") == 3, "Preserve all three ARN account checks"
+    assert root_text.count("data.aws_caller_identity.current.account_id") == 4, "Preserve ACM/SSM/IAM checks and enforce ECR image provenance"
     for name in ["aws_region", "environment"]:
         assert name in variables and not re.search(r'(?m)^\s*default\s*=',variables[name]), (name,"Must be an explicit HCP input")
-    for name in ["infrastructure_reviewed", "application_window_open", "service_enabled", "ai_enabled", "allow_deployment_capacity", "artifacts_provisioned", "database_provisioned", "edge_provisioned", "backend_provisioned", "ai_provisioned", "ai_runtime_reviewed"]:
-        assert re.search(r'\bdefault\s*=\s*false\b',variables[name]), (name,"Activation gate changed")
+    assert re.search(r'\bdefault\s*=\s*false\b',variables["deploy_application"])
+    assert re.search(r'\bdefault\s*=\s*0\b',variables["backend_desired_count"])
+    assert re.search(r'\bdefault\s*=\s*1\b',variables["backend_max_instances"])
+    assert not any(name.endswith("_provisioned") or name.endswith("_reviewed") for name in variables)
+    assert len(variables) == 15, "Update the approved root contract and HCP documentation together"
+    assert '^[A-Za-z0-9_-]{32,128}$' in variables["origin_verification_header"]
+    assert set(p.name for p in (BASE/"modules").iterdir() if p.is_dir()) == {"networking","ecr","frontend","mysql","alb","ecs-backend"}
     workflow=(ROOT/".github/workflows/terraform-ci.yml").read_text(encoding="utf8")
     assert "python scripts/check_infrastructure_sources.py" in workflow
     assert "infrastructure/terraform/aws" not in workflow
@@ -73,7 +78,7 @@ def main():
         assert not re.search(r'source\s*=\s*"(?:[A-Za-z]:|/|\\)',text),"Absolute module source"
     main=(BASE/"main.tf").read_text(encoding="utf8")
     modules=dict(re.findall(r'module\s+"([^"\n]+)"\s*\{(.*?)^\}',main,re.M|re.S))
-    assert len(modules)==8
+    assert len(modules)==6
     outputs={}
     for name,body in modules.items():
         source=re.search(r'source\s*=\s*"([^"\n]+)"',body).group(1)

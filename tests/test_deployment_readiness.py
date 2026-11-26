@@ -92,21 +92,27 @@ class DeploymentReadinessTests(unittest.TestCase):
             self.assertEqual(result['reason'], 'service_configuration_invalid')
             transport.assert_not_called()
 
-    def test_stateful_protection_and_address_moves(self):
+    def test_stateful_protection_is_independent_of_application_count(self):
         base = ROOT / 'infrastructure/terraform/modules'
-        for name in ['frontend', 'ecr', 'mysql', 'ai']:
+        for name in ['frontend', 'ecr', 'mysql']:
             self.assertIn('prevent_destroy = true', (base/name/'main.tf').read_text())
-        for name, expected in [('frontend', 8), ('ecs-backend', 14)]:
-            text = (base/name/'main.tf').read_text()
-            self.assertEqual(text.count('moved {'), expected)
-        ai = (base/'ai/main.tf').read_text()
-        self.assertIn('state = var.enabled ? "running" : "stopped"', ai)
+        from scripts.audit_terraform import blocks
+        root = ROOT/'infrastructure/terraform'
+        parsed = blocks(root/'main.tf', root)
+        log = next(b for b in parsed if b['kind']=='resource' and b['labels']==['aws_cloudwatch_log_group','backend'])
+        self.assertNotIn('count', log['attrs'])
+        self.assertIn('prevent_destroy = true', log['body'])
+        for module in ['database', 'frontend', 'ecr']:
+            call = next(b for b in parsed if b['kind']=='module' and b['labels']==[module])
+            self.assertNotIn('count', call['attrs'])
+        self.assertFalse((base/'ai').exists())
+        self.assertTrue(all('moved {' not in p.read_text() for p in root.rglob('*.tf')))
 
     def test_no_broad_alb_barrier_and_tls_copied_to_image(self):
         main = (ROOT/'infrastructure/terraform/main.tf').read_text()
         backend = (ROOT/'infrastructure/terraform/modules/ecs-backend/main.tf').read_text()
         self.assertNotIn('depends_on = [module.alb]', main)
-        self.assertIn('condition = var.listener_arn != null', backend)
+        self.assertIn('condition = var.listener_rule_arn != null', backend)
         self.assertIn('DB_TLS_MODE",value="verify_identity"', backend)
         self.assertIn('infrastructure/certificates/ ./infrastructure/certificates/', (ROOT/'Dockerfile').read_text())
         self.assertIn('!infrastructure/certificates/rds-us-east-1-bundle.crt', (ROOT/'.dockerignore').read_text())

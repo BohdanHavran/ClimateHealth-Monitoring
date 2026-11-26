@@ -1,5 +1,4 @@
-variable "storage_enabled" { type = bool }
-variable "cdn_enabled" { type = bool }
+# Bucket base adapted from owner modules/s3; current OAC/security/cache behavior retained.
 variable "api_enabled" { type = bool }
 variable "name" {
   type = string
@@ -12,16 +11,14 @@ variable "origin_header" {
   sensitive = true
 }
 resource "aws_s3_bucket" "frontend" {
-  count = var.storage_enabled ? 1 : 0
   bucket = "${var.name}-frontend"
   lifecycle { prevent_destroy = true }
 }
 resource "aws_s3_bucket" "artifacts" {
-  count = var.storage_enabled ? 1 : 0
   bucket = "${var.name}-artifacts"
   lifecycle { prevent_destroy = true }
 }
-locals { buckets = var.storage_enabled ? { frontend = aws_s3_bucket.frontend[0].id, artifacts = aws_s3_bucket.artifacts[0].id } : {} }
+locals { buckets = { frontend = aws_s3_bucket.frontend.id, artifacts = aws_s3_bucket.artifacts.id } }
 resource "aws_s3_bucket_public_access_block" "this" {
   for_each = local.buckets
   bucket = each.value
@@ -48,22 +45,22 @@ resource "aws_s3_bucket_ownership_controls" "this" {
   rule { object_ownership = "BucketOwnerEnforced" }
 }
 resource "aws_cloudfront_origin_access_control" "this" {
-  count = var.cdn_enabled ? 1 : 0
+
   name = var.name
   origin_access_control_origin_type = "s3"
   signing_behavior = "always"
   signing_protocol = "sigv4"
 }
 data "aws_cloudfront_cache_policy" "disabled" {
- count = var.cdn_enabled ? 1 : 0
+
  name = "Managed-CachingDisabled"
 }
 data "aws_cloudfront_origin_request_policy" "api" {
- count = var.cdn_enabled && var.api_enabled ? 1 : 0
+ count = var.api_enabled ? 1 : 0
  name = "Managed-AllViewerExceptHostHeader"
 }
 resource "aws_cloudfront_cache_policy" "assets" {
-  count = var.cdn_enabled ? 1 : 0
+
   name = "${var.name}-assets"
   min_ttl = 0
   default_ttl = 86400
@@ -77,7 +74,7 @@ resource "aws_cloudfront_cache_policy" "assets" {
   }
 }
 resource "aws_cloudfront_function" "routes" {
-  count = var.cdn_enabled ? 1 : 0
+
   name = "${var.name}-spa"
   runtime = "cloudfront-js-2.0"
   publish = true
@@ -90,14 +87,14 @@ resource "aws_cloudfront_function" "routes" {
   JS
 }
 resource "aws_cloudfront_distribution" "this" {
-  count = var.cdn_enabled ? 1 : 0
+
   enabled = true
   default_root_object = "index.html"
   price_class = "PriceClass_100"
   origin {
-    domain_name = aws_s3_bucket.frontend[0].bucket_regional_domain_name
+    domain_name = aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id = "frontend"
-    origin_access_control_id = aws_cloudfront_origin_access_control.this[0].id
+    origin_access_control_id = aws_cloudfront_origin_access_control.this.id
   }
   dynamic "origin" {
     for_each = var.api_enabled ? [1] : []
@@ -121,11 +118,11 @@ resource "aws_cloudfront_distribution" "this" {
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods = ["GET", "HEAD"]
     cached_methods = ["GET", "HEAD"]
-    cache_policy_id = data.aws_cloudfront_cache_policy.disabled[0].id
+    cache_policy_id = data.aws_cloudfront_cache_policy.disabled.id
     compress = true
     function_association {
       event_type = "viewer-request"
-      function_arn = aws_cloudfront_function.routes[0].arn
+      function_arn = aws_cloudfront_function.routes.arn
     }
   }
   dynamic "ordered_cache_behavior" {
@@ -136,7 +133,7 @@ resource "aws_cloudfront_distribution" "this" {
       viewer_protocol_policy = "https-only"
       allowed_methods = ["GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"]
       cached_methods = ["GET", "HEAD"]
-      cache_policy_id = data.aws_cloudfront_cache_policy.disabled[0].id
+      cache_policy_id = data.aws_cloudfront_cache_policy.disabled.id
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api[0].id
       compress = true
     }
@@ -147,7 +144,7 @@ resource "aws_cloudfront_distribution" "this" {
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods = ["GET", "HEAD"]
     cached_methods = ["GET", "HEAD"]
-    cache_policy_id = aws_cloudfront_cache_policy.assets[0].id
+    cache_policy_id = aws_cloudfront_cache_policy.assets.id
     compress = true
   }
   restrictions {
@@ -156,61 +153,21 @@ resource "aws_cloudfront_distribution" "this" {
   viewer_certificate { cloudfront_default_certificate = true }
 }
 resource "aws_s3_bucket_policy" "frontend" {
-  count = var.storage_enabled ? 1 : 0
-  bucket = aws_s3_bucket.frontend[0].id
-  policy = jsonencode({ Version = "2012-10-17", Statement = concat(var.cdn_enabled ? [
-        { Sid = "CloudFrontOnly", Effect = "Allow", Principal = { Service = "cloudfront.amazonaws.com" }, Action = "s3:GetObject", Resource = "${aws_s3_bucket.frontend[0].arn}/*", Condition = { StringEquals = { "AWS:SourceArn" = aws_cloudfront_distribution.this[0].arn } } }
-      ] : [], [
-        { Sid = "DenyHTTP", Effect = "Deny", Principal = "*", Action = "s3:*", Resource = [aws_s3_bucket.frontend[0].arn,"${aws_s3_bucket.frontend[0].arn}/*"], Condition = { Bool = { "aws:SecureTransport" = "false" } } }
+
+  bucket = aws_s3_bucket.frontend.id
+  policy = jsonencode({ Version = "2012-10-17", Statement = concat([
+        { Sid = "CloudFrontOnly", Effect = "Allow", Principal = { Service = "cloudfront.amazonaws.com" }, Action = "s3:GetObject", Resource = "${aws_s3_bucket.frontend.arn}/*", Condition = { StringEquals = { "AWS:SourceArn" = aws_cloudfront_distribution.this.arn } } }
+      ], [
+        { Sid = "DenyHTTP", Effect = "Deny", Principal = "*", Action = "s3:*", Resource = [aws_s3_bucket.frontend.arn,"${aws_s3_bucket.frontend.arn}/*"], Condition = { Bool = { "aws:SecureTransport" = "false" } } }
       ]) })
 }
 resource "aws_s3_bucket_policy" "artifacts" {
-  count = var.storage_enabled ? 1 : 0
-  bucket = aws_s3_bucket.artifacts[0].id
-  policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Deny", Principal = "*", Action = "s3:*", Resource = [aws_s3_bucket.artifacts[0].arn,"${aws_s3_bucket.artifacts[0].arn}/*"], Condition = { Bool = { "aws:SecureTransport" = "false" } } }] })
-}
-output "domain" { value = try(aws_cloudfront_distribution.this[0].domain_name, null) }
-output "distribution_id" { value = try(aws_cloudfront_distribution.this[0].id, null) }
-output "bucket" { value = try(aws_s3_bucket.frontend[0].id, null) }
-output "artifact_bucket" { value = try(aws_s3_bucket.artifacts[0].id, null) }
-output "artifact_bucket_arn" { value = try(aws_s3_bucket.artifacts[0].arn, null) }
 
-moved {
-  from = aws_s3_bucket.frontend
-  to = aws_s3_bucket.frontend[0]
+  bucket = aws_s3_bucket.artifacts.id
+  policy = jsonencode({ Version = "2012-10-17", Statement = [{ Effect = "Deny", Principal = "*", Action = "s3:*", Resource = [aws_s3_bucket.artifacts.arn,"${aws_s3_bucket.artifacts.arn}/*"], Condition = { Bool = { "aws:SecureTransport" = "false" } } }] })
 }
-
-moved {
-  from = aws_s3_bucket.artifacts
-  to = aws_s3_bucket.artifacts[0]
-}
-
-moved {
-  from = aws_cloudfront_origin_access_control.this
-  to = aws_cloudfront_origin_access_control.this[0]
-}
-
-moved {
-  from = aws_cloudfront_cache_policy.assets
-  to = aws_cloudfront_cache_policy.assets[0]
-}
-
-moved {
-  from = aws_cloudfront_function.routes
-  to = aws_cloudfront_function.routes[0]
-}
-
-moved {
-  from = aws_cloudfront_distribution.this
-  to = aws_cloudfront_distribution.this[0]
-}
-
-moved {
-  from = aws_s3_bucket_policy.frontend
-  to = aws_s3_bucket_policy.frontend[0]
-}
-
-moved {
-  from = aws_s3_bucket_policy.artifacts
-  to = aws_s3_bucket_policy.artifacts[0]
-}
+output "domain" { value = try(aws_cloudfront_distribution.this.domain_name, null) }
+output "distribution_id" { value = try(aws_cloudfront_distribution.this.id, null) }
+output "bucket" { value = try(aws_s3_bucket.frontend.id, null) }
+output "artifact_bucket" { value = try(aws_s3_bucket.artifacts.id, null) }
+output "artifact_bucket_arn" { value = try(aws_s3_bucket.artifacts.arn, null) }

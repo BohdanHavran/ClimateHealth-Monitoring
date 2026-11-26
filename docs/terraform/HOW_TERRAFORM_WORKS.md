@@ -1,3 +1,5 @@
+> Актуальне уточнення 26.11.2026: реалізовано [варіант B](VARIANT_B_REPORT.md): 6 modules/15 root inputs, RDS-only, AI відкладено, HCP володіє ECS revisions. Старі gates та EC2 MySQL нижче — контекст попереднього етапу. Поточні inputs/runbook/графи наведено у звіті B. Наступний крок: review diff і окреме погодження публікації; потім дозволений remote validate/Plan, не автоматичний Apply.
+
 # Як працює GitHub → HCP Terraform → AWS
 
 Це пояснення поточного source workflow. За повідомленням користувача HCP уже читає потрібний commit/root і авторизація налаштована окремим способом. Її не досліджували через credential files, не змінювали, HCP configuration/runs/API не викликали. Не потрібно вводити нові authentication variables лише тому, що попередня документація містила OIDC приклад.

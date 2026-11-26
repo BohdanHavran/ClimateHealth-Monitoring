@@ -41,7 +41,7 @@ def references(g):
     modules = {b['labels'][0]: b for b in g['blocks'] if b['kind'] == 'module'}
     variable_docs = ["""# Повний довідник Terraform Variables
 
-Джерело — активний root та всі8child modules, lexical/static аналіз. Root variables задаються через HCP workspace variables/defaults; child variables заповнюють module arguments у main.tf. Child required=true НЕ означає нове required поле HCP UI. Внутрішні name/region/enabled є API модулів, не дублікати UI значень, які треба вводити двічі.
+Джерело — активний root та всі шість child modules, lexical/static аналіз. Root variables задаються через HCP workspace variables/defaults; child variables заповнюють module arguments у main.tf. Child required=true НЕ означає нове required поле HCP UI. Внутрішні name/region/enabled є API модулів, не дублікати UI значень, які треба вводити двічі.
 
 Required нижче означає «немає default»; це не те саме, що non-null або потрібний лише при count>0. Sensitive=true приховує звичайне відображення, але не шифрує самостійно state; тип string не гарантує, що secret не потрапив у Terraform. ARN metadata не є plaintext password. В усіх прикладах AWS identifiers треба брати лише з власних погоджених ресурсів; вигаданих AMI/account/ARN значень немає.
 
@@ -86,12 +86,12 @@ Used in містить прямі source-level consumers. Affects — транз
                 f'| Example | {code(example)} |',
                 f'| Recommendation | {recommendation} |'])
     unused = [b['scope']+'.'+b['labels'][0] for b in variables if not forward[b['ids'][0]]]
-    variable_docs.append('\n## Невикористані та схожі за назвою\n\n'+names(unused)+'\n\nname/env/region копії між scopes — нормальні module bindings. active_window та enabled не еквівалентні: window створює service object/ALB, enabled задає task/ASG capacity. ai_enabled — окремий lifecycle. task_memory_mib→task_memory та allow_deployment_capacity→extra_capacity — перейменування на module boundary, не два незалежні inputs. origin header child inputs — одна передана sensitive root величина.\n\n[Аудит13requiredinputs та групування](REQUIRED_VARIABLES_AUDIT.md). Root CIDR defaults і child defaults дублюються навмисно для backward-compatible standalone module usage; root явно передає значення.\n')
+    variable_docs.append('\n## Невикористані та схожі за назвою\n\n'+names(unused)+'\n\nRoot inputs задаються один раз у HCP, child inputs передає root. deploy_application керує лише API compute/ALB/DNS/CDN API origin; backend_desired_count задає 0 або 1 task, backend_max_instances — стелю ASG 1 або 2. RDS, S3, ECR, CloudFront і журнали зберігаються незалежно. AI inputs відкладені до реальної потреби. [Поточні HCP inputs](../HCP_TERRAFORM.md); [порядок deployment](VARIANT_B_REPORT.md).\n')
     (OUT/'VARIABLES_REFERENCE.md').write_text('\n'.join(variable_docs).rstrip()+'\n',encoding='utf8')
 
     resource_docs = ["""# Повний аудит resource blocks
 
-У цьому переліку кожен із69resource blocks має окрему таблицю; один terraform_data не є AWS ресурсом. count/for_each instances не обчислено. «Завжди» означає наявність блоку без його count, а не дозвіл apply з false review gate. Умовність батьківського module також враховано.
+У цьому переліку кожен із 55 AWS resource blocks має окрему таблицю. count/for_each instances не обчислено. «Завжди» означає наявність блоку без його count, а не факт існування ресурсу в AWS. Умовність батьківського module також враховано.
 
 Dependencies/consumers витягнуті з traversals/input-output bindings і явних depends_on. provider/variables/locals можуть зʼявлятися як залежності, не лише AWS ресурси. Region/account permissions/API availability і реальний AWS state не перевірялися. Replacement оцінка консервативна: точне replace/update/destroy визначить лише дозволений provider Plan з існуючим state; нижче не вигадано ForceNew schema.
 
