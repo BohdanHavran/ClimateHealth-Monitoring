@@ -53,3 +53,4 @@ CloudFront може використовувати сертифікат стор
 3. Застосуй зміну в HCP і вкажи в dynv6 CNAME `app.<зона>` на вихід `cloudfront_domain`. Під час поновлення сертифіката завантаж новий сертифікат в IAM і онови ID у HCP. До підключення власного домену використовуй стандартний `cloudfront_domain`.
 
 [DNS у dynv6](https://dynv6.com/docs/apis) · [Перевірка ACM через DNS](https://docs.aws.amazon.com/acm/latest/userguide/dns-validation.html) · [Let's Encrypt DNS-01](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) · [Сертифікати IAM для CloudFront](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-and-https-procedures.html) · [Пакети CA для RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html)
+
