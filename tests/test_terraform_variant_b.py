@@ -50,18 +50,14 @@ class TerraformVariantBTests(unittest.TestCase):
         self.assertTrue(bool(re.fullmatch(pattern, 'api.example.invalid')))
         self.assertFalse(bool(re.fullmatch(pattern, 'api\\example.invalid')))
 
-    def test_suffix_remains_valid_for_rds_identifier(self):
-        body = self.variables['name_suffix']['body']
-        patterns = re.findall(r'regex\(("[^"\n]+"),\s*var\.name_suffix', body)
-        pattern = json.loads(patterns[0])
-        self.assertTrue(bool(re.fullmatch(pattern, 'demo26')))
-        for value in ['abc-', '-abc', 'abc', 'a'*17]:
-            self.assertFalse(bool(re.fullmatch(pattern, value)))
-        self.assertIn('!can(regex("--", var.name_suffix))', body)
+    def test_environment_and_region_are_constrained(self):
+        self.assertIn('contains(["dev", "production"], var.environment)', self.variables['environment']['body'])
+        self.assertIn('var.aws_region == "eu-north-1"', self.variables['aws_region']['body'])
+        self.assertNotIn('name_suffix', self.variables)
 
     def test_one_small_root_without_speculative_ai_or_creation_flags(self):
-        self.assertEqual(len(self.variables), 15)
-        self.assertEqual({name for name,b in self.variables.items() if 'default' not in b['attrs']}, {'environment','aws_region','name_suffix'})
+        self.assertEqual(len(self.variables), 14)
+        self.assertEqual({name for name,b in self.variables.items() if 'default' not in b['attrs']}, {'environment','aws_region'})
         self.assertFalse(any(n.endswith('_provisioned') or n.endswith('_reviewed') for n in self.variables))
         self.assertFalse({'owner','aws_account_id','ai','database_mode','mysql_ami_id'} & self.variables.keys())
         all_tf='\n'.join(p.read_text(encoding='utf8') for p in BASE.rglob('*.tf'))

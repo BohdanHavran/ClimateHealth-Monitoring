@@ -6,6 +6,12 @@ variable "name" {
 variable "origin_hostname" {
   type = string
 }
+variable "viewer_domain" {
+  type = object({
+    hostname           = string
+    iam_certificate_id = string
+  })
+}
 variable "origin_header" {
   type = string
   sensitive = true
@@ -89,6 +95,7 @@ resource "aws_cloudfront_function" "routes" {
 resource "aws_cloudfront_distribution" "this" {
 
   enabled = true
+  aliases = var.viewer_domain == null ? [] : [var.viewer_domain.hostname]
   default_root_object = "index.html"
   price_class = "PriceClass_100"
   origin {
@@ -150,7 +157,12 @@ resource "aws_cloudfront_distribution" "this" {
   restrictions {
     geo_restriction { restriction_type = "none" }
   }
-  viewer_certificate { cloudfront_default_certificate = true }
+  viewer_certificate {
+    cloudfront_default_certificate = var.viewer_domain == null ? true : null
+    iam_certificate_id             = var.viewer_domain == null ? null : var.viewer_domain.iam_certificate_id
+    ssl_support_method             = var.viewer_domain == null ? null : "sni-only"
+    minimum_protocol_version       = var.viewer_domain == null ? "TLSv1" : "TLSv1.2_2021"
+  }
 }
 resource "aws_s3_bucket_policy" "frontend" {
 

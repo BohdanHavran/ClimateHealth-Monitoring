@@ -115,4 +115,13 @@ class DeploymentReadinessTests(unittest.TestCase):
         self.assertIn('condition = var.listener_rule_arn != null', backend)
         self.assertIn('DB_TLS_MODE",value="verify_identity"', backend)
         self.assertIn('infrastructure/certificates/ ./infrastructure/certificates/', (ROOT/'Dockerfile').read_text())
-        self.assertIn('!infrastructure/certificates/rds-us-east-1-bundle.crt', (ROOT/'.dockerignore').read_text())
+        import ssl
+
+        region = 'eu-north-1'
+        bundle = f'infrastructure/certificates/rds-{region}-bundle.crt'
+        self.assertIn('rds-${var.region}-bundle.crt', backend)
+        self.assertIn(f'!{bundle}', (ROOT/'.dockerignore').read_text().splitlines())
+        context = ssl.create_default_context(cafile=str(ROOT / bundle))
+        self.assertTrue(context.get_ca_certs())
+        self.assertTrue(context.check_hostname)
+        self.assertEqual(context.verify_mode, ssl.CERT_REQUIRED)

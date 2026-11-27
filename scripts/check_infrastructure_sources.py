@@ -1,6 +1,7 @@
 """Dependency-free source checks. NOT Terraform parsing, fmt, validate or plan."""
 import csv
 import json
+import os
 import re
 from pathlib import Path
 
@@ -40,9 +41,13 @@ def balanced(text):
 
 
 def main():
-    files=list(BASE.rglob("*.tf"));assert files
+    files = []
+    for directory, children, names in os.walk(BASE):
+        children[:] = [name for name in children if name != ".terraform"]
+        files.extend(Path(directory)/name for name in names if name.endswith(".tf"))
+    assert files
     assert {p.name for p in BASE.glob("*.tf")} == {"main.tf", "provider.tf", "variable.tf", "output.tf", "data.tf"}, "Unexpected root scaffold"
-    assert {p.name for p in BASE.iterdir() if p.is_dir()} == {"modules"}, "Only modules may be nested under the active root"
+    assert {p.name for p in BASE.iterdir() if p.is_dir() and p.name != ".terraform"} == {"modules"}, "Only modules may be nested under the active root"
     provider=(BASE/"provider.tf").read_text(encoding="utf8")
     assert re.search(r'(?m)^\s*region\s*=\s*var\.aws_region\s*$', provider)
     assert 'version = "= 6.74.0"' in provider
@@ -61,7 +66,7 @@ def main():
     assert re.search(r'\bdefault\s*=\s*0\b',variables["backend_desired_count"])
     assert re.search(r'\bdefault\s*=\s*1\b',variables["backend_max_instances"])
     assert not any(name.endswith("_provisioned") or name.endswith("_reviewed") for name in variables)
-    assert len(variables) == 15, "Update the approved root contract and HCP documentation together"
+    assert len(variables) == 14, "Update the approved root contract and HCP documentation together"
     assert '^[A-Za-z0-9_-]{32,128}$' in variables["origin_verification_header"]
     assert set(p.name for p in (BASE/"modules").iterdir() if p.is_dir()) == {"networking","ecr","frontend","mysql","alb","ecs-backend"}
     workflow=(ROOT/".github/workflows/terraform-ci.yml").read_text(encoding="utf8")
@@ -86,7 +91,8 @@ def main():
         text="\n".join(p.read_text(encoding="utf8") for p in directory.glob("*.tf"))
         inputs=set(re.findall(r'variable\s+"([^"\n]+)"',text))
         assert set(re.findall(r'\bvar\.([a-z_]+)',text))<=inputs, (name,"Undeclared child input")
-        declarations=dict(re.findall(r'variable\s+"([^"\n]+)"\s*\{(.*?)^\}',text,re.M|re.S))
+        from audit_terraform import blocks
+        declarations = {b["labels"][0]: b["body"] for p in directory.glob("*.tf") for b in blocks(p, BASE) if b["kind"] == "variable"}
         required={key for key,value in declarations.items() if not re.search(r'(?m)^\s*default\s*=',value)}
         assigned=set(re.findall(r'(?m)^\s*([a-z_]+)\s*=',body)) - {"source","count","depends_on","providers","for_each"}
         assert assigned<=inputs,(name,assigned-inputs)

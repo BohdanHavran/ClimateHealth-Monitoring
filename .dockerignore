@@ -13,3 +13,5 @@
 !templates/**
 !static/
 !static/**
+
+!infrastructure/certificates/rds-eu-north-1-bundle.crt

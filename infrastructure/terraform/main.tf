@@ -1,5 +1,5 @@
 locals {
-  name = "climatehealth-${var.environment}-${var.name_suffix}"
+  name = "climatehealth-${var.environment}"
   tags = { Project = "ClimateHealth", Environment = var.environment, ManagedBy = "Terraform" }
 }
 
@@ -22,9 +22,11 @@ module "database" {
 module "frontend" {
   source = "./modules/frontend"
   name = local.name
-  api_enabled = var.deploy_application
-  origin_hostname = var.deploy_application ? trimsuffix(aws_route53_record.origin[0].fqdn, ".") : null
+  # Publish the API route after the zero-task bootstrap has supplied the ALB DNS name.
+  api_enabled = var.deploy_application && var.backend_desired_count > 0
+  origin_hostname = var.origin_hostname
   origin_header = var.origin_verification_header
+  viewer_domain = var.frontend_domain
 }
 module "alb" {
   count = var.deploy_application ? 1 : 0
@@ -50,7 +52,7 @@ module "backend" {
   tags = local.tags
   permissions_boundary_arn = var.permissions_boundary_arn
   ami_id = var.ecs_ami_id
-  subnet_id = module.networking.public_subnet_ids[0]
+  subnet_ids = module.networking.public_subnet_ids
   security_group = module.networking.backend_sg
   target_group_arn = module.alb[0].target_group_arn
   listener_rule_arn = module.alb[0].listener_rule_arn
@@ -62,21 +64,4 @@ module "backend" {
   db_host = module.database.host
   log_group_name = aws_cloudwatch_log_group.backend.name
   log_group_arn = aws_cloudwatch_log_group.backend.arn
-}
-resource "aws_route53_record" "origin" {
-  count = var.deploy_application ? 1 : 0
-  zone_id = var.origin_zone_id
-  name = var.origin_hostname
-  type = "A"
-  lifecycle {
-    precondition {
-      condition = module.alb[0].listener_rule_arn != null
-      error_message = "Publish origin DNS only after the HTTPS forwarding rule is ready."
-    }
-  }
-  alias {
-    name = module.alb[0].dns
-    zone_id = module.alb[0].zone_id
-    evaluate_target_health = true
-  }
 }

@@ -14,8 +14,8 @@ variable "permissions_boundary_arn" {
 variable "ami_id" {
   type = string
 }
-variable "subnet_id" {
-  type = string
+variable "subnet_ids" {
+  type = list(string)
 }
 variable "security_group" {
   type = string
@@ -140,7 +140,7 @@ resource "aws_launch_template" "host" {
 }
 resource "aws_autoscaling_group" "host" {
   name                = "${var.name}-backend"
-  vpc_zone_identifier = [var.subnet_id]
+  vpc_zone_identifier = var.subnet_ids
 
   desired_capacity          = var.desired_count
   min_size                  = var.desired_count
@@ -148,9 +148,23 @@ resource "aws_autoscaling_group" "host" {
   health_check_grace_period = 60
   health_check_type         = "EC2"
 
-  launch_template {
-    id      = aws_launch_template.host.id
-    version = aws_launch_template.host.latest_version
+  availability_zone_distribution {
+    capacity_distribution_strategy = "balanced-best-effort"
+  }
+
+  mixed_instances_policy {
+    instances_distribution {
+      on_demand_base_capacity                  = 0
+      on_demand_percentage_above_base_capacity = 0
+      spot_allocation_strategy                 = "price-capacity-optimized"
+    }
+
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.host.id
+        version            = aws_launch_template.host.latest_version
+      }
+    }
   }
 
   termination_policies = ["OldestInstance"]
@@ -208,7 +222,7 @@ resource "aws_ecs_task_definition" "initial" {
           {name="DB_HOST",value=var.db_host}, {name="DB_NAME",value="climate_db"},
           {name="DATABASE_WRITES_ENABLED",value="false"}, {name="CLIMATE_ENV",value="aws"},
           {name="DB_TLS_MODE",value="verify_identity"},
-          {name="DB_TLS_CA_FILE",value="/app/infrastructure/certificates/rds-us-east-1-bundle.crt"}
+          {name="DB_TLS_CA_FILE",value="/app/infrastructure/certificates/rds-${var.region}-bundle.crt"}
         ],
         secrets = [for k,v in var.secret_arns : { name=k, valueFrom=v }],
         logConfiguration = { logDriver="awslogs", options={"awslogs-group"=var.log_group_name,"awslogs-region"=var.region,"awslogs-stream-prefix"="backend"} },

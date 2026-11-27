@@ -14,7 +14,6 @@ Read-only перевірка 26.11.2026: workspace `ClimateHealth-Monitoring` о
 |---|---|---|
 | `environment` | `без default` | Separate HCP workspace environment. |
 | `aws_region` | `без default` | Explicitly approve the costed region and regional RDS CA. |
-| `name_suffix` | `без default` | Stable globally unique non-secret naming suffix. |
 | `vpc_cidr` | `"10.42.0.0/16"` | A /16 IPv4 VPC; four non-overlapping /24 subnets are derived. |
 | `deploy_application` | `false` | Create ephemeral API compute/ALB/DNS and its CDN origin; never gates RDS or storage. |
 | `backend_desired_count` | `0` | Bootstrap at zero; request one task only after CP association is ready. |
@@ -22,17 +21,17 @@ Read-only перевірка 26.11.2026: workspace `ClimateHealth-Monitoring` о
 | `backend_image` | `null` | Reviewed digest in this environment's backend ECR repository; CI supplies the digest. |
 | `ecs_ami_id` | `null` | Approved AL2023 ECS-optimized x86_64 AMI; replacement/refresh needs review. |
 | `origin_hostname` | `null` | Existing DNS hostname covered by the ALB origin certificate. |
-| `origin_zone_id` | `null` | Existing approved Route53 hosted zone; this root does not buy a domain. |
+| `frontend_domain` | `null` | Optional viewer hostname and existing IAM certificate ID. |
 | `origin_certificate_arn` | `null` | Issued ALB ACM certificate ARN with correct DNS SAN/account/region. |
 | `origin_verification_header` | `null` | Generate a fresh random URL-safe origin value; never print or commit it. |
 | `runtime_secret_arns` | `{}` | SSM ARN references for the RDS reader DB_USER and DB_PASS, never secret values. |
 | `permissions_boundary_arn` | `null` | Existing reviewed IAM boundary for application roles; does not change HCP authentication. |
 
-Лише `environment`, `aws_region`, `name_suffix` не мають default. Для погодженого початкового Plan передаються вони; `deploy_application=false`, task count 0, інші nullable inputs лишаються null. Plan все одно потребує дієвої вже налаштованої AWS-авторизації (caller identity, AZ, CloudFront policies/prefix list). Не вводити випадкових ARN/AMI.
+Лише `environment` та `aws_region` не мають default. Для погодженого початкового Plan передаються вони; `deploy_application=false`, task count 0, інші nullable inputs лишаються null. Plan все одно потребує дієвої вже налаштованої AWS-авторизації (caller identity, AZ, CloudFront policies/prefix list). Не вводити випадкових ARN/AMI.
 
 **Початковий Apply створить платні RDS, S3/CloudFront/ECR та інші базові ресурси. False не є no-op чи бюджетним блокуванням.** Manual Apply і review Plan — обов’язкові. Жодних Apply зараз не виконано.
 
-Для `deploy_application=true` потрібні digest власного backend ECR, погоджений ECS-optimized AL2023 AMI, наявні origin hostname/Route53 zone/issued ACM certificate, приватний origin header, SSM DB_USER/DB_PASS reader references та існуюча permissions boundary. Default boundary null не відключає вимогу — validation вимагає її для API. HCP credentials керують provisioning, ці runtime parameters не є новим способом AWS-авторизації.
+Для `deploy_application=true` потрібні digest власного backend ECR, погоджений ECS-optimized AL2023 AMI, наявні external origin hostname/issued ACM certificate, приватний origin header, SSM DB_USER/DB_PASS reader references та існуюча permissions boundary. Default boundary null не відключає вимогу — validation вимагає її для API. HCP credentials керують provisioning, ці runtime parameters не є новим способом AWS-авторизації.
 
 Sensitive origin header задавати як sensitive HCP variable: нове випадкове URL-safe значення 32–128 символів; не друкувати його. Terraform sensitive приховує звичайний output, але значення все одно захищається контролем доступу до State/plan.
 

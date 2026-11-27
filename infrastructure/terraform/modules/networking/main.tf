@@ -5,8 +5,14 @@ variable "name" {
 variable "vpc_cidr" {
   type = string
 }
-data "aws_availability_zones" "available" { state = "available" }
-locals { zones = slice(data.aws_availability_zones.available.names, 0, 2) }
+data "aws_availability_zones" "available" {
+  state = "available"
+  filter {
+    name   = "zone-type"
+    values = ["availability-zone"]
+  }
+}
+locals { zones = slice(data.aws_availability_zones.available.names, 0, 3) }
 resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
   instance_tenancy     = "default"
@@ -23,7 +29,7 @@ resource "aws_internet_gateway" "this" {
   }
 }
 resource "aws_subnet" "public" {
-  count = 2
+  count = length(local.zones)
   vpc_id                  = aws_vpc.this.id
   cidr_block = cidrsubnet(var.vpc_cidr, 8, count.index)
   map_public_ip_on_launch = false
@@ -52,7 +58,7 @@ resource "aws_route" "internet" {
 }
 resource "aws_route_table" "private" { vpc_id = aws_vpc.this.id }
 resource "aws_route_table_association" "public" {
-  count = 2
+  count = length(aws_subnet.public)
   subnet_id = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
